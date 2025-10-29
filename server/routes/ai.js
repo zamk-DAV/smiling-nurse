@@ -27,7 +27,7 @@ router.post('/analyze-daily', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // 프롬프트 생성
     const prompt = `
@@ -102,7 +102,7 @@ router.post('/analyze-statistics', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // 통계 계산
     const avgStress = (records.reduce((sum, r) => sum + (r.stressLevel || 0), 0) / records.length).toFixed(1);
@@ -183,7 +183,7 @@ router.post('/get-advice', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `
 당신은 전문 간호사 건강 관리 AI 어시스턴트입니다.
