@@ -1,6 +1,6 @@
 // 스마일링 널스 - 프로필 로직
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://smiling-nurse.onrender.com/api';
 
 // showAlert 함수는 auth.js에서 정의되어 있으므로 여기서는 사용만 함.
 
