@@ -1,6 +1,5 @@
 // 스마일링 널스 - 통계 로직
 
-const API_URL = 'https://smiling-nurse.onrender.com/api';
 let userId = null;
 let allRecords = [];
 

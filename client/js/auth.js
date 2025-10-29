@@ -1,7 +1,5 @@
 // 스마일링 널스 - 인증 로직
 
-const API_URL = 'https://smiling-nurse.onrender.com/api';
-
 // 알림 표시 함수 (토스트/스낵바 형태로 재정의 - 12번 요구사항)
 function showAlert(message, type = 'success') {
   const notification = document.createElement('div');

@@ -1,7 +1,5 @@
 // 스마일링 널스 - 대시보드 로직
 
-const API_URL = 'https://smiling-nurse.onrender.com/api';
-
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async () => {
   const userId = checkAuth();
