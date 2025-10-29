@@ -1,0 +1,1043 @@
+/* 스마일링 널스 - 고급 UI 스타일 (Uiverse.io 영감) */
+
+/* 기본 리셋 및 변수 */
+:root {
+  --primary-green: #8FD9A8;
+  --secondary-green: #C8E6C9;
+  --light-green: #E8F5E9;
+  --dark-green: #2E7D32;
+  --white: #FFFFFF;
+  --text-dark: #2E7D32;
+  --text-gray: #666666;
+  --accent-pink: #FFE4E6;
+  --accent-blue: #E3F2FD;
+  --accent-yellow: #FFF9C4;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --shadow-lg: rgba(0, 0, 0, 0.2);
+  --border-radius: 16px;
+  --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+  background: linear-gradient(135deg, var(--light-green) 0%, var(--white) 50%, #FFF9E6 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* 고급 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(143, 217, 168, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(143, 217, 168, 0.8);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 컨테이너 */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* 고급 카드 스타일 */
+.card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius);
+  padding: 40px;
+  box-shadow: 0 8px 32px var(--shadow), 0 0 1px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+  animation: fadeIn 0.8s ease-out;
+  border: 1px solid rgba(143, 217, 168, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.card:hover::before {
+  left: 100%;
+}
+
+.card:hover {
+  box-shadow: 0 16px 48px var(--shadow-lg);
+  transform: translateY(-8px);
+  border-color: var(--primary-green);
+}
+
+/* 헤더 */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: slideIn 0.8s ease-out;
+}
+
+.logo {
+  font-size: 56px;
+  margin-bottom: 15px;
+  animation: bounce 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+.header h1 {
+  color: var(--primary-green);
+  font-size: 36px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header p {
+  color: var(--text-gray);
+  font-size: 16px;
+}
+
+/* 고급 폼 스타일 - Floating Label */
+.form-group {
+  margin-bottom: 28px;
+  animation: slideIn 0.6s ease-out;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text-dark);
+  font-weight: 600;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid var(--secondary-green);
+  border-radius: 14px;
+  font-size: 16px;
+  transition: var(--transition);
+  background: var(--white);
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 4px rgba(143, 217, 168, 0.15);
+  transform: translateY(-2px);
+  background: #FAFFFE;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* 커스텀 슬라이더 */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: linear-gradient(to right, var(--secondary-green), var(--primary-green));
+  outline: none;
+  transition: var(--transition);
+}
+
+input[type="range"]:hover {
+  background: linear-gradient(to right, var(--primary-green), var(--dark-green));
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-green), #66BB6A);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(143, 217, 168, 0.5);
+  transition: var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(143, 217, 168, 0.7);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-green), #66BB6A);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(143, 217, 168, 0.5);
+  border: none;
+  transition: var(--transition);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(143, 217, 168, 0.7);
+}
+
+/* 5, 8번 요구사항: 슬라이더 값 텍스트 동적 위치 조정 */
+.range-value-container {
+  margin-top: 8px;
+  position: relative;
+  width: 100%;
+  height: 24px;
+}
+
+/* 슬라이더 값 텍스트 (5 부분) */
+.range-value {
+  position: absolute;
+  top: 0;
+  font-size: 24px; 
+  font-weight: 700; 
+  color: var(--primary-green);
+  
+  /* JS에서 설정한 --range-value (0%~100%)를 기준으로 위치를 계산 */
+  left: var(--range-value, 50%); 
+  transform: translateX(calc(-50% - 12px)); /* 50% 중앙 정렬 및 보정 */
+  
+  transition: transform 0.1s linear, left 0.1s linear;
+}
+
+/* / 10 (또는 /MAX) 부분 */
+.range-value-max {
+    position: absolute;
+    top: 0;
+    color: var(--text-gray);
+    font-size: 24px; 
+    font-weight: 700; 
+    
+    /* JS에서 설정한 --range-value (0%~100%)를 기준으로 위치를 계산 */
+    left: var(--range-value, 50%);
+    transform: translateX(calc(-50% + 12px)); /* 50% 중앙 정렬 및 보정 */
+    
+    transition: transform 0.1s linear, left 0.1s linear;
+}
+
+
+/* 7번 요구사항: 식사 규칙성 체크박스 그룹 스타일링 */
+/* 기존의 .checkbox-group 스타일을 대신하여 사용 */
+.checkbox-group-wrapper {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.checkbox-group-styled {
+  /* 전체 영역을 클릭 가능하게 만들고 윤곽선 추가 */
+  padding: 12px 20px;
+  border: 2px solid var(--secondary-green);
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  background: linear-gradient(135deg, var(--white), rgba(255, 255, 255, 0.8));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.checkbox-group-styled:hover {
+  border-color: var(--primary-green);
+  background: var(--light-green);
+  box-shadow: 0 4px 12px rgba(143, 217, 168, 0.3);
+  transform: translateY(-2px);
+}
+
+/* 체크된 상태의 스타일 */
+.checkbox-group-styled input[type="checkbox"]:checked {
+  accent-color: var(--primary-green);
+}
+.checkbox-group-styled input[type="checkbox"]:checked + label {
+  color: var(--dark-green);
+  font-weight: 600;
+}
+
+/* 체크박스 크기 조정 */
+.checkbox-group-styled input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.checkbox-group-styled label {
+  cursor: pointer;
+  flex: 1;
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+/* (기존) 체크박스 그룹 스타일 제거 */
+.checkbox-group, .checkbox-input {
+    /* 이 클래스들은 HTML에서 더 이상 사용되지 않거나, 다른 스타일로 대체됨 */
+    display: none !important; 
+}
+
+
+/* 고급 버튼 스타일 (Uiverse.io 영감) */
+.btn {
+  display: inline-block;
+  padding: 16px 40px;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-green) 0%, #66BB6A 100%);
+  color: var(--white);
+  box-shadow: 0 6px 20px rgba(143, 217, 168, 0.4);
+  border: 2px solid transparent;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(143, 217, 168, 0.6);
+  animation: glow 2s ease-in-out infinite;
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--primary-green);
+  border: 2px solid var(--primary-green);
+  box-shadow: 0 4px 16px rgba(143, 217, 168, 0.2);
+}
+
+.btn-secondary:hover {
+  background: var(--light-green);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(143, 217, 168, 0.4);
+}
+
+.btn-full {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* 링크 */
+.text-link {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 700;
+  transition: var(--transition);
+  position: relative;
+}
+
+.text-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-green);
+  transition: width 0.3s;
+}
+
+.text-link:hover::after {
+  width: 100%;
+}
+
+.text-link:hover {
+  color: var(--dark-green);
+}
+
+.text-center {
+  text-align: center;
+  margin-top: 24px;
+  color: var(--text-gray);
+}
+
+/* 네비게이션 개선 */
+.nav {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 20px 40px;
+  box-shadow: 0 4px 24px var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  animation: slideIn 0.8s ease-out;
+  border-bottom: 3px solid var(--light-green);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--primary-green);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-menu {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+}
+
+.nav-menu a {
+  color: var(--text-dark);
+  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  transition: var(--transition);
+  font-weight: 600;
+  position: relative;
+}
+
+.nav-menu a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: var(--primary-green);
+  transition: width 0.3s, left 0.3s;
+}
+
+.nav-menu a:hover::before {
+  width: 80%;
+  left: 10%;
+}
+
+.nav-menu a:hover {
+  background: var(--light-green);
+  transform: translateY(-2px);
+  color: var(--dark-green);
+}
+
+.nav-menu a.active {
+  background: var(--primary-green);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(143, 217, 168, 0.4);
+}
+
+/* 알림 메시지 개선 (기존 alert-container용) */
+.alert {
+  padding: 18px 24px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  animation: fadeIn 0.5s ease-out;
+  border-left: 5px solid;
+  box-shadow: 0 4px 16px var(--shadow);
+  font-weight: 500;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, var(--light-green), rgba(200, 230, 201, 0.5));
+  color: var(--text-dark);
+  border-left-color: var(--primary-green);
+}
+
+.alert-error {
+  background: linear-gradient(135deg, #FFEBEE, rgba(255, 205, 210, 0.5));
+  color: #C62828;
+  border-left-color: #EF5350;
+}
+
+/* JS에서 사용하는 커스텀 알림 (토스트/스낵바) 스타일 */
+.alert-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 14px 24px;
+    border-radius: 10px;
+    background-color: var(--primary-green); /* 기본 성공 색상 */
+    color: var(--white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    opacity: 0;
+    font-weight: 600;
+    animation: fadeIn 0.3s forwards;
+    transform: translateY(20px);
+    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+}
+.alert-notification.fade-out {
+    opacity: 0;
+    transform: translateY(40px);
+}
+.alert-notification.error {
+    background-color: #EF5350;
+}
+.alert-notification.warning {
+    background-color: #FFC107;
+    color: var(--text-dark);
+}
+
+
+/* 그리드 레이아웃 */
+.grid {
+  display: grid;
+  gap: 28px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* 통계 카드 개선 */
+.stat-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), var(--light-green));
+  padding: 28px;
+  border-radius: var(--border-radius);
+  text-align: center;
+  transition: var(--transition);
+  box-shadow: 0 6px 20px var(--shadow);
+  border: 2px solid rgba(143, 217, 168, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(143, 217, 168, 0.1) 0%, transparent 70%);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.stat-card:hover {
+  transform: translateY(-12px) scale(1.03);
+  box-shadow: 0 16px 40px var(--shadow-lg);
+  border-color: var(--primary-green);
+}
+
+.stat-card .icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.stat-card .value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--primary-green);
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card .label {
+  font-size: 14px;
+  color: var(--text-gray);
+  font-weight: 600;
+}
+
+/* 멋진 로딩 스피너 */
+.spinner {
+  width: 50px;
+  height: 50px;
+  margin: 30px auto;
+  position: relative;
+}
+
+.spinner::before,
+.spinner::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner::before {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--secondary-green);
+  border-top-color: var(--primary-green);
+}
+
+.spinner::after {
+  width: 40px;
+  height: 40px;
+  border: 4px solid transparent;
+  border-top-color: var(--dark-green);
+  top: 5px;
+  left: 5px;
+  animation-direction: reverse;
+  animation-duration: 0.7s;
+}
+
+/* 단계 표시기 개선 */
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.step {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--secondary-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.step.active {
+  background: linear-gradient(135deg, var(--primary-green), #66BB6A);
+  color: var(--white);
+  transform: scale(1.3);
+  box-shadow: 0 6px 20px rgba(143, 217, 168, 0.5);
+}
+
+.step.completed {
+  background: var(--dark-green);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+}
+
+/* 프로그레스 바 개선 */
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--secondary-green);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-green) 0%, #66BB6A 50%, var(--dark-green) 100%);
+  transition: width 0.8s ease-out;
+  box-shadow: 0 0 10px rgba(143, 217, 168, 0.5);
+  animation: shimmer 2s linear infinite;
+  background-size: 1000px 100%;
+}
+
+/* 질병 선택 컴포넌트 (새로운 디자인) */
+.disease-selector {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), var(--light-green));
+  border-radius: 16px;
+  padding: 24px;
+  border: 2px solid var(--secondary-green);
+}
+
+.disease-search {
+  margin-bottom: 20px;
+}
+
+.disease-search input {
+  width: 100%;
+  padding: 14px 20px 14px 50px;
+  border: 2px solid var(--secondary-green);
+  border-radius: 12px;
+  font-size: 16px;
+  transition: var(--transition);
+  background: var(--white) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%238FD9A8" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>') no-repeat 16px center;
+}
+
+.disease-search input:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 4px rgba(143, 217, 168, 0.15);
+}
+
+.disease-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.category-tab {
+  padding: 10px 20px;
+  background: var(--white);
+  border: 2px solid var(--secondary-green);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.category-tab:hover {
+  background: var(--light-green);
+  transform: translateY(-2px);
+}
+
+.category-tab.active {
+  background: linear-gradient(135deg, var(--primary-green), #66BB6A);
+  color: var(--white);
+  border-color: var(--primary-green);
+  box-shadow: 0 4px 12px rgba(143, 217, 168, 0.4);
+}
+
+.disease-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+}
+
+.disease-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--white);
+  border: 2px solid var(--secondary-green);
+  border-radius: 10px;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative; /* 체크 표시를 위해 */
+}
+
+.disease-item:hover {
+  background: var(--light-green);
+  transform: translateX(6px);
+  border-color: var(--primary-green);
+}
+
+.disease-item.selected {
+  background: linear-gradient(135deg, var(--light-green), var(--secondary-green));
+  border-color: var(--primary-green);
+  box-shadow: 0 4px 12px rgba(143, 217, 168, 0.3);
+}
+
+.disease-item label {
+  flex: 1;
+  cursor: pointer;
+  font-weight: 500;
+  margin: 0;
+}
+
+.disease-item .checkmark {
+    font-size: 20px;
+    color: var(--primary-green);
+    font-weight: 900;
+    width: 20px;
+    text-align: center;
+}
+
+.selected-diseases {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 2px dashed var(--secondary-green);
+}
+
+.selected-diseases h4 {
+  color: var(--dark-green);
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.disease-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.disease-tag {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, var(--primary-green), #66BB6A);
+  color: var(--white);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(143, 217, 168, 0.4);
+  animation: fadeIn 0.4s ease-out;
+  position: relative;
+  padding-right: 40px; /* 버튼 공간 확보 */
+}
+
+.disease-tag span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.disease-tag button {
+  background: none;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: var(--transition);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.disease-tag button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.disease-detail-input {
+  /* 태그 내부 스타일 조정 */
+  margin-top: 4px;
+  padding: 6px 10px;
+  width: 100%;
+  min-width: 200px;
+  border: 1px solid var(--secondary-green);
+  border-radius: 6px;
+  font-size: 13px;
+  transition: var(--transition);
+  color: var(--text-dark);
+}
+
+.disease-detail-input:focus {
+  border-color: var(--dark-green);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* 반응형 디자인 개선 */
+@media (max-width: 768px) {
+  .nav {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+
+  .nav-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .nav-menu a {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .card {
+    padding: 24px 20px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+  }
+
+  .logo {
+    font-size: 48px;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .disease-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .disease-categories {
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 14px 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+
+  .card {
+    padding: 20px 16px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .stat-card .icon {
+    font-size: 44px;
+  }
+
+  .stat-card .value {
+    font-size: 28px;
+  }
+}
+
+/* 스크롤바 커스텀 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-green);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-green);
+  border-radius: 5px;
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-green);
+}

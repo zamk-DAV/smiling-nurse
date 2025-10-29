@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스마일링 널스 - 통계</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- 11번 요구사항: Chart.js 로드 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- 네비게이션 -->
+  <nav class="nav">
+    <a href="dashboard.html" class="nav-brand" style="text-decoration: none; color: inherit; cursor: pointer;">
+      <span>😊🩺</span>
+      <span>스마일링 널스</span>
+    </a>
+    <ul class="nav-menu">
+      <li><a href="dashboard.html">대시보드</a></li>
+      <li><a href="daily-check.html">오늘의 기록</a></li>
+      <li><a href="statistics.html" class="active">통계</a></li>
+      <li><a href="profile.html">프로필</a></li>
+      <li><a href="#" onclick="logout()">로그아웃</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="card" style="margin-bottom: 32px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div class="header" style="text-align: left; margin-bottom: 0;">
+          <div class="logo">📊</div>
+          <h1>나의 건강 통계</h1>
+          <p>데이터로 보는 나의 건강 변화</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button onclick="getAIStatisticsAnalysis()" class="btn btn-primary" id="ai-analysis-btn">
+            🤖 AI 종합 분석
+          </button>
+          <button onclick="downloadCSV()" class="btn btn-secondary">
+            📥 CSV 다운로드
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수치 통계 카드 -->
+    <div class="grid grid-3" style="margin-bottom: 32px;" id="summary-stats">
+      <!-- 10번 요구사항: 총 기록 일수 클릭 시 모든 기록 보기 -->
+      <div class="stat-card" onclick="viewAllRecords()" style="cursor: pointer; transition: var(--transition);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <div class="icon">📝</div>
+        <div class="value" id="total-records">0</div>
+        <div class="label">총 기록 일수</div>
+        <small style="color: var(--primary-green); margin-top: 8px;">클릭하여 개별 기록 보기</small>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon">😰</div>
+        <div class="value" id="avg-stress-all">-</div>
+        <div class="label">평균 스트레스 수준</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon">🧠</div>
+        <div class="value" id="avg-pss">-</div>
+        <div class="label">평균 PSS-10 점수</div>
+      </div>
+    </div>
+
+    <!-- 그래프 섹션 -->
+    <div class="grid grid-2" style="margin-bottom: 32px;">
+      <div class="card">
+        <h2 style="color: var(--primary-green); margin-bottom: 20px;">📈 스트레스 수준 추이</h2>
+        <canvas id="stress-chart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2 style="color: var(--primary-green); margin-bottom: 20px;">😴 수면 시간 추이</h2>
+        <canvas id="sleep-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 32px;">
+      <h2 style="color: var(--primary-green); margin-bottom: 20px;">🧠 PSS-10 점수 추이</h2>
+      <canvas id="pss-chart"></canvas>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h2 style="color: var(--primary-green); margin-bottom: 20px;">💪 업무 강도 추이</h2>
+        <canvas id="work-chart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2 style="color: var(--primary-green); margin-bottom: 20px;">🍽️ 식사 규칙성</h2>
+        <canvas id="meals-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- 데이터가 없을 때 -->
+    <div id="no-data" style="display: none;">
+      <div class="card" style="text-align: center; padding: 60px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+        <h2 style="color: var(--text-gray); margin-bottom: 16px;">아직 기록이 없습니다</h2>
+        <p style="color: var(--text-gray); margin-bottom: 24px;">첫 기록을 남겨서 통계를 확인해보세요!</p>
+        <a href="daily-check.html" class="btn btn-primary">첫 기록 남기기</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/statistics.js"></script>
+</body>
+</html>

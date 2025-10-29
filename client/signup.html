@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스마일링 널스 - 회원가입</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="card" style="max-width: 700px; width: 100%;">
+      <div class="header">
+        <div class="logo">😊🩺</div>
+        <h1>스마일링 널스 회원가입</h1>
+        <p>건강한 마음을 위한 첫 걸음</p>
+      </div>
+
+      <div class="steps">
+        <div class="step active">1</div>
+        <div class="step">2</div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: 50%;"></div>
+      </div>
+
+      <form id="signup-form">
+        <div class="step-content">
+          <h2 style="color: var(--primary-green); margin-bottom: 24px;">💳 계정 정보 입력</h2>
+
+          <div class="form-group">
+            <label for="signup-username">아이디</label>
+            <input type="text" id="signup-username" name="username" placeholder="사용할 아이디를 입력하세요" required>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-password">비밀번호</label>
+            <input type="password" id="signup-password" name="password" placeholder="6자 이상의 비밀번호를 입력하세요" required>
+          </div>
+
+          <div class="form-group">
+            <label for="confirm-password">비밀번호 확인</label>
+            <input type="password" id="confirm-password" name="confirm-password" placeholder="비밀번호를 다시 입력하세요" required>
+          </div>
+        </div>
+
+        <div class="step-content" style="display: none;">
+          <h2 style="color: var(--primary-green); margin-bottom: 24px;">👤 기본 정보 입력</h2>
+
+          <div class="form-group">
+            <label for="name">이름</label>
+            <input type="text" id="name" name="name" placeholder="이름을 입력하세요" required>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="age">연령</label>
+              <input type="number" id="age" name="age" placeholder="나이" min="20" max="100" required>
+            </div>
+
+            <div class="form-group">
+              <label for="gender">성별</label>
+              <select id="gender" name="gender" required>
+                <option value="">선택하세요</option>
+                <option value="여성">여성</option>
+                <option value="남성">남성</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="height">키 (cm)</label>
+              <input type="number" id="height" name="height" placeholder="예: 165" min="100" max="250" step="0.1" required>
+            </div>
+
+            <div class="form-group">
+              <label for="weight">몸무게 (kg)</label>
+              <input type="number" id="weight" name="weight" placeholder="예: 60" min="30" max="200" step="0.1" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="occupation">직업</label>
+            <input type="text" id="occupation" name="occupation" placeholder="예: 간호사" required>
+          </div>
+
+          <div class="form-group">
+            <label>🏥 만성질환 및 기저질환 (선택사항)</label>
+            <div id="disease-selector-container"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 28px;">
+          <button type="button" id="prev-btn" class="btn btn-secondary" style="flex: 1; display: none;">
+            ← 이전
+          </button>
+          <button type="button" id="next-btn" class="btn btn-primary" style="flex: 1;">
+            다음 →
+          </button>
+          <button type="submit" id="submit-btn" class="btn btn-primary" style="flex: 1; display: none;">
+            ✨ 가입 완료
+          </button>
+        </div>
+      </form>
+
+      <div class="text-center">
+        <p>이미 계정이 있으신가요? <a href="index.html" class="text-link">로그인</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/disease-selector.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

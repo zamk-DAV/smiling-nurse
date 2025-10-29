@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스마일링 널스 - 오늘의 기록</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* 7번 요구사항: 식사 규칙성 체크박스 스타일 */
+    .checkbox-group-wrapper {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .checkbox-group-styled {
+      /* 전체 영역을 클릭 가능하게 만들고 윤곽선 추가 */
+      padding: 12px 20px;
+      border: 2px solid var(--secondary-green); /* CSS 변수 직접 사용 */
+      border-radius: 12px;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      user-select: none; /* 텍스트 드래그 방지 */
+      background: linear-gradient(135deg, var(--white), rgba(255, 255, 255, 0.8));
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .checkbox-group-styled:hover {
+      border-color: var(--primary-green);
+      background-color: var(--light-green); /* CSS 변수 직접 사용 */
+    }
+    .checkbox-group-styled input[type="checkbox"]:checked + label {
+      color: var(--primary-green);
+      font-weight: 600;
+    }
+    .checkbox-group-styled input[type="checkbox"] {
+      margin-right: 10px;
+      width: 18px;
+      height: 18px;
+    }
+
+    /* 5, 8번 요구사항: 슬라이더 값 텍스트 위치를 동적으로 조정 */
+    .range-value-container {
+      margin-top: 8px;
+      position: relative;
+      width: 100%;
+      height: 24px;
+    }
+
+    /* 슬라이더 값 텍스트 (5/10에서 5 부분) */
+    .range-value {
+      position: absolute;
+      top: 0;
+      font-size: 24px; 
+      font-weight: 700; 
+      color: var(--primary-green);
+      
+      /* JS에서 설정한 --range-value (0%~100%)를 기준으로 위치를 계산 */
+      left: var(--range-value, 50%); 
+      transform: translateX(calc(-50% - 12px)); /* 50% 중앙 정렬 및 보정 */
+      
+      transition: transform 0.1s linear, left 0.1s linear;
+    }
+    
+    /* 5/10에서 /10 부분 */
+    .range-value-max {
+        position: absolute;
+        top: 0;
+        color: var(--text-gray);
+        font-size: 24px; 
+        font-weight: 700; 
+        
+        /* JS에서 설정한 --range-value (0%~100%)를 기준으로 위치를 계산 */
+        left: var(--range-value, 50%);
+        transform: translateX(calc(-50% + 12px)); /* 50% 중앙 정렬 및 보정 */
+        
+        transition: transform 0.1s linear, left 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    function initializeRangeValues() {
+      // 모든 range input 찾기
+      const sliders = document.querySelectorAll('input[type="range"]');
+      sliders.forEach(slider => {
+        // oninput 로직과 동일하게 초기값 설정
+        // **수정: const 대신 let 또는 var 사용, 혹은 아래처럼 선언 키워드 없이 직접 사용**
+        var percentage = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+        if (slider.nextElementSibling) {
+          slider.nextElementSibling.style.setProperty('--range-value', percentage + '%');
+        }
+      });
+    }
+    // 페이지 로드 시 실행
+    document.addEventListener('DOMContentLoaded', initializeRangeValues);
+  </script>
+  
+  <nav class="nav">
+    <a href="dashboard.html" class="nav-brand" style="text-decoration: none; color: inherit; cursor: pointer;">
+      <span>😊🩺</span>
+      <span>스마일링 널스</span>
+    </a>
+    <ul class="nav-menu">
+      <li><a href="dashboard.html">대시보드</a></li>
+      <li><a href="daily-check.html" class="active">오늘의 기록</a></li>
+      <li><a href="statistics.html">통계</a></li>
+      <li><a href="profile.html">프로필</a></li>
+      <li><a href="#" onclick="logout()">로그아웃</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="card" style="max-width: 900px; margin: 0 auto;">
+      <div class="header">
+        <div class="logo">📝</div>
+        <h1>오늘의 건강 기록</h1>
+        <p>오늘 하루를 돌아보며 기록해주세요</p>
+      </div>
+
+      <form id="daily-check-form">
+        <div class="card" style="background: var(--light-green); margin-bottom: 24px; padding: 24px;">
+          <h2 style="color: var(--primary-green); margin-bottom: 20px;">📊 오늘의 상태</h2>
+
+          <div class="form-group">
+            <label for="stress-level">오늘의 스트레스 수준 (1-10점)</label>
+            <input type="range" id="stress-level" name="stressLevel" min="1" max="10" value="5" step="1" style="width: 100%;" 
+                   oninput="
+                     document.getElementById('stress-value').textContent = this.value; 
+                     var percentage = ((this.value - this.min) / (this.max - this.min)) * 100;
+                     this.nextElementSibling.style.setProperty('--range-value', percentage + '%');
+                   ">
+            <div class="range-value-container" id="stress-range-container" style="--range-value: 50%;"> 
+              <span class="range-value" id="stress-value">5</span>
+              <span class="range-value-max" style="color: var(--text-gray);">/ 10</span>
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label>수면 시간</label>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="flex: 1;">
+                  <input type="number" id="sleep-hours" name="sleepHours" min="0" max="23" value="0" step="1" required>
+                  <small style="color: var(--text-gray); display: block; margin-top: 4px; text-align: center;">시간</small>
+                </div>
+                <div style="flex: 1;">
+                  <input type="number" id="sleep-minutes" name="sleepMinutes" min="0" max="59" value="0" step="1" required>
+                  <small style="color: var(--text-gray); display: block; margin-top: 4px; text-align: center;">분</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="sleep-quality">수면의 질 (1-5점)</label>
+              <select id="sleep-quality" name="sleepQuality">
+                <option value="">선택하세요</option>
+                <option value="1">1 - 매우 나쁨</option>
+                <option value="2">2 - 나쁨</option>
+                <option value="3">3 - 보통</option>
+                <option value="4">4 - 좋음</option>
+                <option value="5">5 - 매우 좋음</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>식사 규칙성</label>
+            <div class="checkbox-group-wrapper">
+              <div class="checkbox-group-styled">
+                <input type="checkbox" id="breakfast" name="meals" value="breakfast">
+                <label for="breakfast">아침</label>
+              </div>
+              <div class="checkbox-group-styled">
+                <input type="checkbox" id="lunch" name="meals" value="lunch">
+                <label for="lunch">점심</label>
+              </div>
+              <div class="checkbox-group-styled">
+                <input type="checkbox" id="dinner" name="meals" value="dinner">
+                <label for="dinner">저녁</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="work-intensity">업무 강도 (1-10점)</label>
+            <input type="range" id="work-intensity" name="workIntensity" min="1" max="10" value="5" step="1" style="width: 100%;" 
+                   oninput="
+                     document.getElementById('work-value').textContent = this.value;
+                     var percentage = ((this.value - this.min) / (this.max - this.min)) * 100;
+                     this.nextElementSibling.style.setProperty('--range-value', percentage + '%');
+                   ">
+            <div class="range-value-container" id="work-range-container" style="--range-value: 50%;">
+              <span class="range-value" id="work-value">5</span>
+              <span class="range-value-max" style="color: var(--text-gray);">/ 10</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background: var(--accent-blue); margin-bottom: 24px; padding: 24px;">
+          <h2 style="color: var(--primary-green); margin-bottom: 20px;">💊 건강 지표 (선택사항)</h2>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="blood-sugar">혈당 (mg/dL)</label>
+              <input type="number" id="blood-sugar" name="bloodSugar" min="0" max="600" placeholder="예: 100">
+            </div>
+
+            <div class="form-group">
+              <label for="steps">걸음 수</label>
+              <input type="number" id="steps" name="steps" min="0" max="100000" placeholder="예: 8000">
+            </div>
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="bp-systolic">혈압 - 수축기 (mmHg)</label>
+              <input type="number" id="bp-systolic" name="bloodPressureSystolic" min="0" max="300" placeholder="예: 120">
+            </div>
+
+            <div class="form-group">
+              <label for="bp-diastolic">혈압 - 이완기 (mmHg)</label>
+              <input type="number" id="bp-diastolic" name="bloodPressureDiastolic" min="0" max="200" placeholder="예: 80">
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background: var(--accent-pink); margin-bottom: 24px; padding: 24px;">
+          <h2 style="color: var(--primary-green); margin-bottom: 12px;">🧠 스트레스 인지 척도 (PSS-10)</h2>
+          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">지난 한 달 동안의 경험을 생각하며 각 질문에 답해주세요.</p>
+
+          <div class="pss-questions">
+            <div class="form-group">
+              <label>1. 지난 한 달 동안, 예상치 못한 일이 발생해서 기분이 상한 적이 얼마나 있었습니까?</label>
+              <select name="pss1" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>2. 지난 한 달 동안, 중요한 일들을 통제할 수 없다고 느낀 적이 얼마나 있었습니까?</label>
+              <select name="pss2" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>3. 지난 한 달 동안, 신경이 예민해지고 스트레스를 받은 적이 얼마나 있었습니까?</label>
+              <select name="pss3" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>4. 지난 한 달 동안, 개인적인 문제들을 다루는 데 있어 자신감을 느낀 적이 얼마나 있었습니까?</label>
+              <select name="pss4" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>5. 지난 한 달 동안, 일들이 자신의 뜻대로 진행되고 있다고 느낀 적이 얼마나 있었습니까?</label>
+              <select name="pss5" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>6. 지난 한 달 동안, 해야 할 일들이 너무 많이 쌓여서 감당할 수 없다고 느낀 적이 얼마나 있었습니까?</label>
+              <select name="pss6" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>7. 지난 한 달 동안, 일상생활의 짜증을 잘 다룰 수 있었던 적이 얼마나 있었습니까?</label>
+              <select name="pss7" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>8. 지난 한 달 동안, 자신이 모든 일을 잘 처리하고 있다고 느낀 적이 얼마나 있었습니까?</label>
+              <select name="pss8" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>9. 지난 한 달 동안, 통제할 수 없는 일들 때문에 화가 난 적이 얼마나 있었습니까?</label>
+              <select name="pss9" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>10. 지난 한 달 동안, 어려움이 너무 많이 쌓여서 극복할 수 없다고 느낀 적이 얼마나 있었습니까?</label>
+              <select name="pss10" required>
+                <option value="">선택하세요</option>
+                <option value="0">0 - 전혀 없었다</option>
+                <option value="1">1 - 거의 없었다</option>
+                <option value="2">2 - 때때로 있었다</option>
+                <option value="3">3 - 자주 있었다</option>
+                <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px; padding: 24px;">
+          <h2 style="color: var(--primary-green); margin-bottom: 20px;">💬 오늘 하고 싶은 말</h2>
+          <div class="form-group">
+            <textarea id="notes" name="notes" placeholder="오늘 하루 어떠셨나요? 자유롭게 기록해보세요..." rows="6"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">저장하기</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/daily-check.js"></script>
+</body>
+</html>

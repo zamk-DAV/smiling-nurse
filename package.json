@@ -1,0 +1,24 @@
+{
+  "name": "smiling-nurse",
+  "version": "1.0.0",
+  "description": "간호사 스트레스 관리 웹 서비스",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
+  },
+  "keywords": ["nurse", "stress-management", "health"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "@google/generative-ai": "^0.1.3",
+    "mongoose": "^8.0.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

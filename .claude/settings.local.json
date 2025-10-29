@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "WebFetch(domain:uiverse.io)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /F /PID 14236)",
+      "Bash(taskkill:*)",
+      "Read(//c/**)",
+      "Bash(dir:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMongoDB 연동 완료 및 백엔드 서버 구축\n\n- MongoDB Atlas 연결 설정\n- User 및 Record 모델 생성\n- 인증, 사용자, 기록 관리 API 구현\n- Render 배포 준비 완료\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
