@@ -22,7 +22,14 @@ router.post('/start', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    // 모델명 시도 순서: gemini-2.0-flash-exp -> gemini-1.5-pro
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    } catch (err) {
+      console.log('gemini-2.0-flash-exp 사용 불가, gemini-1.5-pro 시도');
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    }
 
     // PHQ-9 해석
     let phq9Level = '정보 없음';
@@ -136,13 +143,28 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 
     // 첫 질문 생성 (시스템 프롬프트와 함께)
     const firstPrompt = systemPrompt + '\n\n사용자에게 첫 질문을 자연스럽고 친근하게 해주세요.';
-    const result = await geminiChat.sendMessage(firstPrompt);
-    const firstQuestion = result.response.text();
 
-    console.log('Gemini 첫 질문 응답:', firstQuestion);
+    console.log('Gemini에 요청 전송 중...');
+    console.log('모델:', model._modelName);
+
+    let result;
+    let firstQuestion;
+
+    try {
+      result = await geminiChat.sendMessage(firstPrompt);
+      console.log('Gemini 응답 받음');
+      console.log('result.response:', result.response);
+
+      firstQuestion = result.response.text();
+      console.log('Gemini 첫 질문 응답:', firstQuestion);
+    } catch (err) {
+      console.error('Gemini API 호출 오류:', err);
+      throw new Error(`Gemini API 호출 실패: ${err.message}`);
+    }
 
     // 응답 검증
     if (!firstQuestion || firstQuestion.trim().length === 0) {
+      console.error('빈 응답 받음. result:', JSON.stringify(result, null, 2));
       throw new Error('Gemini API가 빈 응답을 반환했습니다.');
     }
 
