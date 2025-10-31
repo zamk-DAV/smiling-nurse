@@ -13,7 +13,7 @@ const geminiSessions = new Map();
 // 1. 채팅 시작
 router.post('/start', async (req, res) => {
   try {
-    const { recordData, profileData, userId, recordId } = req.body;
+    const { recordData, profileData, userId, recordId, conversationMode } = req.body;
 
     if (!genAI) {
       return res.status(500).json({
@@ -42,8 +42,50 @@ router.post('/start', async (req, res) => {
       else pssLevel = '높음';
     }
 
-    // 시스템 프롬프트 생성
-    const systemPrompt = `
+    // 시스템 프롬프트 생성 (대화 모드에 따라 다름)
+    let systemPrompt;
+
+    if (conversationMode) {
+      // 대화 모드: 심층 대화 위주
+      systemPrompt = `
+당신은 전문 간호사 건강 관리 AI 어시스턴트입니다.
+
+**사용자 프로필:**
+- 연령: ${profileData?.age || '정보 없음'}세
+- 성별: ${profileData?.gender || '정보 없음'}
+- 경력: ${profileData?.yearsOfExperience || '정보 없음'}년차
+- 직책: ${profileData?.position || '정보 없음'}
+- 진료과: ${profileData?.department || '정보 없음'}
+
+**현재까지 작성한 정보:**
+- 근무 형태: ${recordData.workType || '아직 작성 안 함'}
+${recordData.shiftType ? `- 근무 시간: ${recordData.shiftType}` : ''}
+- 스트레스 수준: ${recordData.stressLevel ? `${recordData.stressLevel}/10` : '아직 작성 안 함'}
+- 수면: ${recordData.sleepHours ? `${recordData.sleepHours}시간 ${recordData.sleepMinutes || 0}분` : '아직 작성 안 함'}
+- 업무 강도: ${recordData.workIntensity ? `${recordData.workIntensity}/10` : '아직 작성 안 함'}
+${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
+
+**대화 목적:**
+사용자는 폼 작성 중에 대화를 요청했습니다. 폼에서 다루지 않는 심층적인 내용을 대화로 다뤄야 합니다:
+1. 구체적인 스트레스 원인 (인간관계, 환자 대응, 업무 과부하 등)
+2. 감정 상태 (불안, 우울, 분노, 좌절감 등)
+3. 최근 특별히 힘들었던 사건이나 상황
+4. 대처 방법이나 해소 방법
+5. 일상 생활에서의 어려움
+6. 개인적 고민이나 걱정
+
+**대화 가이드:**
+1. 짧고 명확한 질문 (한 번에 1-2개 질문만)
+2. 공감적이고 친근한 톤 유지
+3. 음성 대화이므로 자연스럽고 대화체로 응답
+4. 3-5번의 간단한 대화로 핵심 파악
+5. 종료 시 짧은 조언만 제공 (상세한 조언은 폼 저장 후 제공됨)
+
+첫 질문으로 오늘 가장 힘들었던 점이나 마음 속 이야기를 편하게 물어보세요.
+`;
+    } else {
+      // 기존 모드: 전체 데이터 기반 대화
+      systemPrompt = `
 당신은 전문 간호사 건강 관리 AI 어시스턴트입니다.
 
 **사용자 프로필:**
@@ -82,6 +124,7 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 
 이제 사용자와 음성 대화를 시작하세요. 첫 질문을 해주세요.
 `;
+    }
 
     // Gemini 채팅 세션 시작
     const geminiChat = model.startChat({
@@ -108,14 +151,15 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     // MongoDB에 채팅 세션 생성
     const chatSession = new ChatSession({
       userId,
-      recordId,
+      recordId: recordId || null,
       messages: [
         {
           role: 'ai',
           content: firstQuestion
         }
       ],
-      status: 'active'
+      status: 'active',
+      conversationMode: conversationMode || false
     });
 
     await chatSession.save();
@@ -123,7 +167,8 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     // Gemini 세션 메모리에 저장
     geminiSessions.set(chatSession._id.toString(), {
       geminiChat,
-      messageCount: 1
+      messageCount: 1,
+      conversationMode: conversationMode || false
     });
 
     res.json({
@@ -216,7 +261,7 @@ router.post('/message', async (req, res) => {
 // 3. 대화 종료 및 최종 분석
 router.post('/end', async (req, res) => {
   try {
-    const { sessionId } = req.body;
+    const { sessionId, conversationMode } = req.body;
 
     // DB에서 세션 가져오기
     const chatSession = await ChatSession.findById(sessionId);
@@ -236,11 +281,22 @@ router.post('/end', async (req, res) => {
       });
     }
 
-    // 최종 종합 조언 요청
-    const result = await geminiSession.geminiChat.sendMessage(
-      '대화 내용을 바탕으로 종합적인 건강 조언을 3-5가지 제공해주세요. 구체적이고 실천 가능한 조언이어야 합니다.'
-    );
-    const finalAdvice = result.response.text();
+    let finalAdvice;
+
+    // 대화 모드에 따라 다른 종료 메시지
+    if (conversationMode || geminiSession.conversationMode) {
+      // 대화 모드: 짧은 종료 메시지
+      const result = await geminiSession.geminiChat.sendMessage(
+        '대화를 마무리하며, 사용자에게 위로와 격려의 말을 짧게 전해주세요. 그리고 기록 저장 후 상세한 조언을 받을 수 있다고 안내해주세요.'
+      );
+      finalAdvice = result.response.text();
+    } else {
+      // 기존 모드: 상세한 종합 조언
+      const result = await geminiSession.geminiChat.sendMessage(
+        '대화 내용을 바탕으로 종합적인 건강 조언을 3-5가지 제공해주세요. 구체적이고 실천 가능한 조언이어야 합니다.'
+      );
+      finalAdvice = result.response.text();
+    }
 
     // 최종 조언 저장
     chatSession.finalAdvice = finalAdvice;

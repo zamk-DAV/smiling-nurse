@@ -10,7 +10,13 @@ const ChatSessionSchema = new mongoose.Schema({
   recordId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Record',
-    required: true
+    required: false // 대화 모드에서는 recordId가 없을 수 있음
+  },
+
+  // 대화 모드 (저장 전 대화)
+  conversationMode: {
+    type: Boolean,
+    default: false
   },
 
   // 대화 메시지 기록

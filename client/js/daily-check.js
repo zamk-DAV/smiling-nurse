@@ -315,6 +315,7 @@ let recognition = null;
 let synthesis = window.speechSynthesis;
 let isListening = false;
 let isSpeaking = false;
+let conversationMode = false; // 대화 모드 (저장 없이 대화만)
 
 // 음성 인식 초기화
 function initSpeechRecognition() {
@@ -405,7 +406,87 @@ function updateSpeakingStatus(speaking) {
   }
 }
 
-// 음성 대화 시작 함수
+// 대화 모드 시작 함수 (폼 작성 중 대화)
+async function startConversationMode() {
+  const userId = localStorage.getItem('userId');
+  const form = document.getElementById('daily-check-form');
+  const formData = new FormData(form);
+
+  // 음성 인식 초기화
+  const recognitionInstance = initSpeechRecognition();
+  if (!recognitionInstance) {
+    return;
+  }
+
+  // 대화 모드 활성화
+  conversationMode = true;
+
+  // 현재 작성 중인 폼 데이터 수집 (검증 없이)
+  const meals = [];
+  document.querySelectorAll('input[name="meals"]:checked').forEach(input => {
+    meals.push(input.value);
+  });
+
+  const partialRecordData = {
+    workType: formData.get('workType') || null,
+    shiftType: formData.get('shiftType') || null,
+    stressLevel: formData.get('stressLevel') ? parseInt(formData.get('stressLevel')) : null,
+    sleepHours: formData.get('sleepHours') ? parseInt(formData.get('sleepHours')) : null,
+    sleepMinutes: formData.get('sleepMinutes') ? parseInt(formData.get('sleepMinutes')) : null,
+    sleepQuality: formData.get('sleepQuality') ? parseInt(formData.get('sleepQuality')) : null,
+    meals: meals,
+    workIntensity: formData.get('workIntensity') ? parseInt(formData.get('workIntensity')) : null,
+    notes: formData.get('notes') || ''
+  };
+
+  try {
+    // 프로필 데이터 가져오기
+    const profileResponse = await fetch(`${API_URL}/user/profile/${userId}`);
+    const profileData = await profileResponse.json();
+
+    // 음성 대화 UI 표시
+    showVoiceUI();
+
+    // 채팅 세션 시작 (recordId 없이, 대화 모드)
+    const response = await fetch(`${API_URL}/chat/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recordData: partialRecordData,
+        profileData: profileData.profile,
+        userId,
+        recordId: null, // 저장 전이므로 recordId 없음
+        conversationMode: true // 대화 모드 플래그
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // 세션 ID 저장
+      window.chatSessionId = data.sessionId;
+      window.chatMessageCount = 0;
+
+      // 첫 AI 메시지 표시 및 음성 출력
+      addVoiceMessage('ai', data.message);
+      await speak(data.message);
+
+      // 음성 인식 설정
+      setupVoiceRecognition();
+    } else {
+      showAlert('음성 대화 시작에 실패했습니다.', 'error');
+      closeVoiceUI();
+      conversationMode = false;
+    }
+  } catch (error) {
+    console.error('음성 대화 시작 오류:', error);
+    showAlert('음성 대화 시작 중 오류가 발생했습니다.', 'error');
+    closeVoiceUI();
+    conversationMode = false;
+  }
+}
+
+// 음성 대화 시작 함수 (AI 분석 후 대화)
 async function startHealthChat() {
   const userId = localStorage.getItem('userId');
   const recordData = window.currentRecordData;
@@ -653,23 +734,38 @@ async function endVoiceSession() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sessionId: window.chatSessionId
+        sessionId: window.chatSessionId,
+        conversationMode: conversationMode
       })
     });
 
     const data = await response.json();
 
     if (data.success) {
-      // 최종 조언 표시 및 음성 출력
-      const finalMessage = '최종 건강 조언입니다. ' + data.advice;
-      addVoiceMessage('ai', data.advice);
-      await speak(finalMessage);
+      // 대화 모드일 때는 간단한 종료 메시지만
+      if (conversationMode) {
+        const endMessage = data.advice || '대화를 마칩니다. 저장하기 버튼을 눌러 기록을 저장해주세요.';
+        addVoiceMessage('ai', endMessage);
+        await speak(endMessage);
 
-      // 몇 초 후 대시보드로 이동
-      setTimeout(() => {
-        closeVoiceUI();
-        window.location.href = 'dashboard.html';
-      }, 5000);
+        // 음성 UI 닫고 폼으로 돌아가기
+        setTimeout(() => {
+          closeVoiceUI();
+          conversationMode = false;
+          showAlert('대화가 종료되었습니다. 저장하기를 눌러 기록을 저장하세요.', 'success');
+        }, 3000);
+      } else {
+        // 기존 로직: 최종 조언 표시 및 대시보드 이동
+        const finalMessage = '최종 건강 조언입니다. ' + data.advice;
+        addVoiceMessage('ai', data.advice);
+        await speak(finalMessage);
+
+        // 몇 초 후 대시보드로 이동
+        setTimeout(() => {
+          closeVoiceUI();
+          window.location.href = 'dashboard.html';
+        }, 5000);
+      }
     } else {
       showAlert('세션 종료에 실패했습니다.', 'error');
     }
