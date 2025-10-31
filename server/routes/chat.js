@@ -22,7 +22,7 @@ router.post('/start', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // PHQ-9 해석
     let phq9Level = '정보 없음';
