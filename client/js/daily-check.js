@@ -532,57 +532,69 @@ function updateSpeakingStatus(speaking) {
 
 // 대화 모드 시작 함수 (폼 작성 중 대화)
 async function startConversationMode() {
+  console.log('🎤 startConversationMode() 호출됨');
+
   const userId = localStorage.getItem('userId');
+  console.log('userId:', userId);
 
   if (!userId) {
+    console.error('❌ userId가 없음');
     showAlert('로그인이 필요합니다.', 'error');
     return;
   }
 
   // 로딩 오버레이 표시
+  console.log('⏳ 로딩 오버레이 표시');
   const loadingOverlay = showLoadingOverlay('🎤 AI와 대화를 시작하는 중...');
 
   try {
+    console.log('✅ try 블록 시작');
     const form = document.getElementById('daily-check-form');
     const formData = new FormData(form);
+    console.log('✅ 폼 데이터 생성 완료');
 
     // 음성 인식 초기화
+    console.log('🎙️ 음성 인식 초기화 시작');
     const recognitionInstance = initSpeechRecognition();
     if (!recognitionInstance) {
+      console.error('❌ 음성 인식 초기화 실패');
       closeLoadingOverlay();
       return;
     }
+    console.log('✅ 음성 인식 초기화 완료');
 
     // Web Audio API 초기화 (소음 제한용)
+    console.log('🔊 Web Audio API 초기화 시작');
     if (!audioContext) {
       await initAudioContext();
     }
+    console.log('✅ Web Audio API 초기화 완료');
 
     // 대화 모드 활성화
     conversationMode = true;
+    console.log('✅ 대화 모드 활성화');
 
-  // 현재 작성 중인 폼 데이터 수집 (검증 없이)
-  const meals = [];
-  document.querySelectorAll('input[name="meals"]:checked').forEach(input => {
-    meals.push(input.value);
-  });
+    // 현재 작성 중인 폼 데이터 수집 (검증 없이)
+    const meals = [];
+    document.querySelectorAll('input[name="meals"]:checked').forEach(input => {
+      meals.push(input.value);
+    });
 
-  const partialRecordData = {
-    workType: formData.get('workType') || null,
-    shiftType: formData.get('shiftType') || null,
-    stressLevel: formData.get('stressLevel') ? parseInt(formData.get('stressLevel')) : null,
-    sleepHours: formData.get('sleepHours') ? parseInt(formData.get('sleepHours')) : null,
-    sleepMinutes: formData.get('sleepMinutes') ? parseInt(formData.get('sleepMinutes')) : null,
-    sleepQuality: formData.get('sleepQuality') ? parseInt(formData.get('sleepQuality')) : null,
-    meals: meals,
-    workIntensity: formData.get('workIntensity') ? parseInt(formData.get('workIntensity')) : null,
-    notes: formData.get('notes') || ''
-  };
+    const partialRecordData = {
+      workType: formData.get('workType') || null,
+      shiftType: formData.get('shiftType') || null,
+      stressLevel: formData.get('stressLevel') ? parseInt(formData.get('stressLevel')) : null,
+      sleepHours: formData.get('sleepHours') ? parseInt(formData.get('sleepHours')) : null,
+      sleepMinutes: formData.get('sleepMinutes') ? parseInt(formData.get('sleepMinutes')) : null,
+      sleepQuality: formData.get('sleepQuality') ? parseInt(formData.get('sleepQuality')) : null,
+      meals: meals,
+      workIntensity: formData.get('workIntensity') ? parseInt(formData.get('workIntensity')) : null,
+      notes: formData.get('notes') || ''
+    };
 
-  console.log('대화 모드 시작 - userId:', userId);
-  console.log('부분 폼 데이터:', partialRecordData);
+    console.log('대화 모드 시작 - userId:', userId);
+    console.log('부분 폼 데이터:', partialRecordData);
 
-  try {
     // 프로필 데이터 가져오기
     console.log('프로필 데이터 요청 중...');
     const profileResponse = await fetch(`${API_URL}/user/profile/${userId}`);
@@ -645,7 +657,11 @@ async function startConversationMode() {
       conversationMode = false;
     }
   } catch (error) {
-    console.error('음성 대화 시작 오류 상세:', error);
+    console.error('❌ 음성 대화 시작 오류 상세:', error);
+    console.error('오류 스택:', error.stack);
+    console.error('오류 메시지:', error.message);
+    console.error('API_URL:', API_URL);
+    console.error('userId:', userId);
     closeLoadingOverlay();
     showAlert(`음성 대화 시작 중 오류가 발생했습니다: ${error.message}`, 'error');
     closeVoiceUI();
