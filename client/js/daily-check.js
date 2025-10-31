@@ -265,14 +265,9 @@ function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Lev
         ${formatAnalysis(analysis)}
       </div>
 
-      <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-        <button onclick="startHealthChat()" class="btn btn-secondary" style="flex: 1;">
-          🎤 AI와 음성 상담하기
-        </button>
-        <button onclick="closeAIModal()" class="btn btn-primary" style="flex: 1;">
-          ✅ 대시보드로 이동
-        </button>
-      </div>
+      <button onclick="closeAIModal()" class="btn btn-primary" style="width: 100%;">
+        ✅ 확인
+      </button>
     </div>
   `;
 
@@ -343,8 +338,8 @@ function speak(text) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = 1.3; // 1.0 → 1.3 (30% 빠르게)
-    utterance.pitch = 1.1; // 1.0 → 1.1 (약간 높게, 더 생동감)
+    utterance.rate = 1.1; // 약간 빠르게
+    utterance.pitch = 1.1; // 약간 높게, 더 생동감
     utterance.volume = 1.0;
 
     // 한국어 음성 선택 (브라우저가 로드될 때까지 대기)
@@ -821,6 +816,10 @@ function closeVoiceUI() {
   if (recognition && isListening) {
     recognition.stop();
   }
+
+  // 상태 초기화
+  isSpeaking = false;
+  isListening = false;
 
   const voiceModal = document.getElementById('voice-modal');
   if (voiceModal) {

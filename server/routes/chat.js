@@ -271,8 +271,9 @@ router.post('/message', async (req, res) => {
     // 메시지 카운트 증가
     geminiSession.messageCount++;
 
-    // 5-7번 대화 후 종료 제안
-    const shouldEnd = geminiSession.messageCount >= 6;
+    // 4회 대화 후 종료 제안, 최대 6회
+    // messageCount: 1(첫질문), 2(2번째), 3(3번째), 4(4번째), 5(5번째=4회 대답완료)
+    const shouldEnd = geminiSession.messageCount >= 5; // 4회 이상
 
     res.json({
       success: true,
