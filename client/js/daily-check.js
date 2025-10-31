@@ -117,6 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
 
       if (data.success) {
+        // Record ID 저장 (대화 시 사용)
+        const recordId = data.record?._id || data.recordId;
+
         // 저장 완료 메시지
         showAlert('✅ 기록이 성공적으로 저장되었습니다. AI 분석을 시작합니다.', 'success');
         submitBtn.innerHTML = '🤖 AI 분석 중... <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span>';
@@ -135,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else phq9Level = '심한 우울증상';
 
         // AI 분석 요청 (9번 요구사항)
-        getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9Level, submitBtn, originalText);
+        getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9Level, recordId, submitBtn, originalText);
       } else {
         // 오류 시 버튼 복원
         submitBtn.disabled = false;
@@ -153,10 +156,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // AI 분석 요청 함수
-async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9Level, submitBtn, originalText) {
+async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9Level, recordId, submitBtn, originalText) {
   try {
     const userId = localStorage.getItem('userId');
-    
+
     // 프로필 데이터 가져오기
     const profileResponse = await fetch(`${API_URL}/user/profile/${userId}`);
     const profileData = await profileResponse.json();
@@ -167,7 +170,8 @@ async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9L
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         recordData: recordData,
-        profileData: profileData.profile
+        profileData: profileData.profile,
+        userId: userId
       })
     });
 
@@ -178,7 +182,7 @@ async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9L
 
     if (data.success) {
       // AI 분석 결과 모달 표시
-      showAIAnalysisModal(data.analysis, pssTotal, stressLevel, phq9Total, phq9Level, recordData, profileData.profile);
+      showAIAnalysisModal(data.analysis, pssTotal, stressLevel, phq9Total, phq9Level, recordData, profileData.profile, recordId);
     } else {
       // AI 분석 실패 시에도 기본 결과 표시
       showAlert(`✨ AI 분석에 실패했습니다. PSS-10: ${pssTotal}점, PHQ-9: ${phq9Total}점`, 'warning');
@@ -199,7 +203,7 @@ async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9L
 }
 
 // AI 분석 결과 모달 표시 (9번 요구사항)
-function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Level, recordData, profileData) {
+function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Level, recordData, profileData, recordId) {
   // 모달 HTML 생성
   const modal = document.createElement('div');
   modal.id = 'ai-modal';
@@ -263,7 +267,7 @@ function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Lev
 
       <div style="display: flex; gap: 12px; margin-bottom: 12px;">
         <button onclick="startHealthChat()" class="btn btn-secondary" style="flex: 1;">
-          💬 AI와 상담하기
+          🎤 AI와 음성 상담하기
         </button>
         <button onclick="closeAIModal()" class="btn btn-primary" style="flex: 1;">
           ✅ 대시보드로 이동
@@ -277,6 +281,7 @@ function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Lev
   // 채팅 데이터 저장 (채팅 시작 시 사용)
   window.currentRecordData = recordData;
   window.currentProfileData = profileData;
+  window.currentRecordId = recordId;
 }
 
 // AI 분석 텍스트 포맷팅
@@ -303,14 +308,118 @@ function closeAIModal() {
   }
 }
 
-// 채팅 시작 함수
+// === 음성 대화 기능 ===
+
+// 음성 인식 및 합성 초기화
+let recognition = null;
+let synthesis = window.speechSynthesis;
+let isListening = false;
+let isSpeaking = false;
+
+// 음성 인식 초기화
+function initSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    showAlert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해주세요.', 'error');
+    return null;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = 'ko-KR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  return recognition;
+}
+
+// 텍스트를 음성으로 변환 (TTS)
+function speak(text) {
+  return new Promise((resolve) => {
+    if (isSpeaking) {
+      synthesis.cancel();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // 한국어 음성 선택 (브라우저가 로드될 때까지 대기)
+    const setVoiceAndSpeak = () => {
+      const voices = synthesis.getVoices();
+      const koreanVoice = voices.find(voice => voice.lang.startsWith('ko'));
+      if (koreanVoice) {
+        utterance.voice = koreanVoice;
+      }
+
+      utterance.onstart = () => {
+        isSpeaking = true;
+        updateSpeakingStatus(true);
+      };
+
+      utterance.onend = () => {
+        isSpeaking = false;
+        updateSpeakingStatus(false);
+        resolve();
+      };
+
+      utterance.onerror = (e) => {
+        console.error('TTS 오류:', e);
+        isSpeaking = false;
+        updateSpeakingStatus(false);
+        resolve();
+      };
+
+      synthesis.speak(utterance);
+    };
+
+    // 음성 목록이 로드되어 있지 않으면 대기
+    if (synthesis.getVoices().length === 0) {
+      synthesis.addEventListener('voiceschanged', setVoiceAndSpeak, { once: true });
+    } else {
+      setVoiceAndSpeak();
+    }
+  });
+}
+
+// 음성 상태 UI 업데이트
+function updateSpeakingStatus(speaking) {
+  const statusDiv = document.getElementById('voice-status');
+  const micButton = document.getElementById('mic-button');
+
+  if (statusDiv) {
+    if (speaking) {
+      statusDiv.innerHTML = '🔊 AI가 말하는 중...';
+      statusDiv.style.color = 'var(--primary-green)';
+      if (micButton) micButton.disabled = true;
+    } else if (isListening) {
+      statusDiv.innerHTML = '🎤 듣고 있습니다...';
+      statusDiv.style.color = '#FF6B6B';
+    } else {
+      statusDiv.innerHTML = '💬 마이크 버튼을 눌러 말씀해주세요';
+      statusDiv.style.color = 'var(--text-gray)';
+      if (micButton) micButton.disabled = false;
+    }
+  }
+}
+
+// 음성 대화 시작 함수
 async function startHealthChat() {
   const userId = localStorage.getItem('userId');
   const recordData = window.currentRecordData;
   const profileData = window.currentProfileData;
+  const recordId = window.currentRecordId;
 
-  if (!recordData || !profileData) {
-    showAlert('채팅을 시작할 수 없습니다. 데이터를 다시 확인해주세요.', 'error');
+  if (!recordData || !profileData || !recordId) {
+    showAlert('대화를 시작할 수 없습니다. 데이터를 다시 확인해주세요.', 'error');
+    return;
+  }
+
+  // 음성 인식 초기화
+  const recognitionInstance = initSpeechRecognition();
+  if (!recognitionInstance) {
     return;
   }
 
@@ -318,8 +427,8 @@ async function startHealthChat() {
   const aiModal = document.getElementById('ai-modal');
   if (aiModal) aiModal.remove();
 
-  // 채팅 UI 표시
-  showChatUI();
+  // 음성 대화 UI 표시
+  showVoiceUI();
 
   try {
     // 채팅 세션 시작
@@ -329,7 +438,8 @@ async function startHealthChat() {
       body: JSON.stringify({
         recordData,
         profileData,
-        userId
+        userId,
+        recordId
       })
     });
 
@@ -340,24 +450,28 @@ async function startHealthChat() {
       window.chatSessionId = data.sessionId;
       window.chatMessageCount = 0;
 
-      // 첫 AI 메시지 표시
-      addChatMessage('ai', data.message);
+      // 첫 AI 메시지 표시 및 음성 출력
+      addVoiceMessage('ai', data.message);
+      await speak(data.message);
+
+      // 음성 인식 설정
+      setupVoiceRecognition();
     } else {
-      showAlert('채팅 시작에 실패했습니다.', 'error');
-      closeChatUI();
+      showAlert('음성 상담 시작에 실패했습니다.', 'error');
+      closeVoiceUI();
     }
   } catch (error) {
-    console.error('채팅 시작 오류:', error);
-    showAlert('채팅 시작 중 오류가 발생했습니다.', 'error');
-    closeChatUI();
+    console.error('음성 상담 시작 오류:', error);
+    showAlert('음성 상담 시작 중 오류가 발생했습니다.', 'error');
+    closeVoiceUI();
   }
 }
 
-// 채팅 UI 표시
-function showChatUI() {
-  const chatUI = document.createElement('div');
-  chatUI.id = 'chat-modal';
-  chatUI.style.cssText = `
+// 음성 대화 UI 표시
+function showVoiceUI() {
+  const voiceUI = document.createElement('div');
+  voiceUI.id = 'voice-modal';
+  voiceUI.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
@@ -371,55 +485,53 @@ function showChatUI() {
     animation: fadeIn 0.3s ease-out;
   `;
 
-  chatUI.innerHTML = `
+  voiceUI.innerHTML = `
     <div class="card" style="max-width: 600px; width: 90%; height: 80vh; display: flex; flex-direction: column; position: relative;">
-      <button onclick="closeChatUI()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-gray); z-index: 10;">×</button>
+      <button onclick="closeVoiceUI()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-gray); z-index: 10;">×</button>
 
       <div style="padding: 24px; border-bottom: 2px solid var(--light-green);">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <div class="logo" style="font-size: 32px;">💬</div>
+          <div class="logo" style="font-size: 32px;">🎤</div>
           <div>
-            <h2 style="color: var(--primary-green); margin: 0;">AI 건강 상담</h2>
+            <h2 style="color: var(--primary-green); margin: 0;">AI 음성 상담</h2>
             <p style="color: var(--text-gray); margin: 4px 0 0 0; font-size: 14px;">편안하게 이야기 나눠보세요</p>
           </div>
         </div>
       </div>
 
-      <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 20px; background: #f9f9f9;">
+      <div id="voice-messages" style="flex: 1; overflow-y: auto; padding: 20px; background: #f9f9f9;">
         <!-- 메시지가 여기에 추가됩니다 -->
       </div>
 
-      <div style="padding: 16px; border-top: 2px solid var(--light-green); background: white;">
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="chat-input" placeholder="메시지를 입력하세요..."
-            style="flex: 1; padding: 12px; border: 2px solid var(--light-green); border-radius: 8px; font-size: 14px;"
-            onkeypress="if(event.key === 'Enter') sendChatMessage()">
-          <button onclick="sendChatMessage()" class="btn btn-primary" style="padding: 12px 24px; white-space: nowrap;">
-            전송
-          </button>
+      <div style="padding: 20px; border-top: 2px solid var(--light-green); background: white;">
+        <div id="voice-status" style="text-align: center; margin-bottom: 16px; font-size: 16px; font-weight: 500; color: var(--text-gray);">
+          💬 마이크 버튼을 눌러 말씀해주세요
         </div>
-        <div id="chat-end-prompt" style="display: none; margin-top: 12px;">
-          <button onclick="endChatSession()" class="btn btn-secondary btn-full">
-            💾 상담 종료 및 조언 받기
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button id="mic-button" onclick="startListening()" class="btn btn-primary" style="flex: 1; padding: 16px; font-size: 18px;">
+            🎤 말하기
+          </button>
+          <button onclick="endVoiceSession()" class="btn btn-secondary" style="padding: 16px 24px; white-space: nowrap;">
+            💾 종료
           </button>
         </div>
       </div>
     </div>
   `;
 
-  document.body.appendChild(chatUI);
+  document.body.appendChild(voiceUI);
 }
 
-// 채팅 메시지 추가
-function addChatMessage(sender, message) {
-  const messagesContainer = document.getElementById('chat-messages');
+// 음성 메시지 추가
+function addVoiceMessage(sender, message) {
+  const messagesContainer = document.getElementById('voice-messages');
   if (!messagesContainer) return;
 
   const messageDiv = document.createElement('div');
   messageDiv.style.cssText = `
     margin-bottom: 16px;
     display: flex;
-    ${sender === 'user' ? 'justify-content: flex-end;' : 'justify-content: flex-start;'}
+    justify-content: ${sender === 'user' ? 'flex-end' : 'flex-start'};
   `;
 
   const bubbleColor = sender === 'user' ? 'var(--primary-green)' : 'white';
@@ -444,17 +556,63 @@ function addChatMessage(sender, message) {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// 채팅 메시지 전송
-async function sendChatMessage() {
-  const input = document.getElementById('chat-input');
-  const message = input.value.trim();
+// 음성 인식 설정
+function setupVoiceRecognition() {
+  if (!recognition) return;
 
-  if (!message) return;
+  recognition.onresult = async (event) => {
+    const transcript = event.results[0][0].transcript;
+    console.log('인식된 음성:', transcript);
 
-  // 사용자 메시지 표시
-  addChatMessage('user', message);
-  input.value = '';
+    // 사용자 메시지 표시
+    addVoiceMessage('user', transcript);
 
+    // 음성 인식 종료 상태로 변경
+    isListening = false;
+    updateSpeakingStatus(false);
+
+    // AI에게 메시지 전송
+    await sendVoiceMessage(transcript);
+  };
+
+  recognition.onerror = (event) => {
+    console.error('음성 인식 오류:', event.error);
+    isListening = false;
+    updateSpeakingStatus(false);
+
+    if (event.error === 'no-speech') {
+      showAlert('음성이 감지되지 않았습니다. 다시 시도해주세요.', 'warning');
+    } else if (event.error === 'not-allowed') {
+      showAlert('마이크 권한이 필요합니다. 브라우저 설정을 확인해주세요.', 'error');
+    } else {
+      showAlert('음성 인식 중 오류가 발생했습니다.', 'error');
+    }
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    updateSpeakingStatus(false);
+  };
+}
+
+// 음성 인식 시작
+function startListening() {
+  if (!recognition || isListening || isSpeaking) return;
+
+  isListening = true;
+  updateSpeakingStatus(false);
+
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error('음성 인식 시작 오류:', error);
+    isListening = false;
+    updateSpeakingStatus(false);
+  }
+}
+
+// 음성 메시지 전송
+async function sendVoiceMessage(message) {
   try {
     const response = await fetch(`${API_URL}/chat/message`, {
       method: 'POST',
@@ -468,12 +626,16 @@ async function sendChatMessage() {
     const data = await response.json();
 
     if (data.success) {
-      // AI 응답 표시
-      addChatMessage('ai', data.message);
+      // AI 응답 표시 및 음성 출력
+      addVoiceMessage('ai', data.message);
+      await speak(data.message);
 
-      // 대화 종료 제안
+      window.chatMessageCount = data.messageCount || 0;
+
+      // 5-7번 대화 후 종료 제안 (음성으로)
       if (data.shouldEnd) {
-        document.getElementById('chat-end-prompt').style.display = 'block';
+        const endMessage = '충분히 대화를 나눴습니다. 종료 버튼을 눌러 최종 건강 조언을 받아보세요.';
+        await speak(endMessage);
       }
     } else {
       showAlert('메시지 전송에 실패했습니다.', 'error');
@@ -484,8 +646,8 @@ async function sendChatMessage() {
   }
 }
 
-// 채팅 세션 종료
-async function endChatSession() {
+// 음성 세션 종료
+async function endVoiceSession() {
   try {
     const response = await fetch(`${API_URL}/chat/end`, {
       method: 'POST',
@@ -498,14 +660,16 @@ async function endChatSession() {
     const data = await response.json();
 
     if (data.success) {
-      // 최종 조언 표시
-      addChatMessage('ai', '=== 최종 건강 조언 ===\n\n' + data.advice);
+      // 최종 조언 표시 및 음성 출력
+      const finalMessage = '최종 건강 조언입니다. ' + data.advice;
+      addVoiceMessage('ai', data.advice);
+      await speak(finalMessage);
 
       // 몇 초 후 대시보드로 이동
       setTimeout(() => {
-        closeChatUI();
+        closeVoiceUI();
         window.location.href = 'dashboard.html';
-      }, 3000);
+      }, 5000);
     } else {
       showAlert('세션 종료에 실패했습니다.', 'error');
     }
@@ -515,13 +679,23 @@ async function endChatSession() {
   }
 }
 
-// 채팅 UI 닫기
-function closeChatUI() {
-  const chatModal = document.getElementById('chat-modal');
-  if (chatModal) {
-    chatModal.style.animation = 'fadeOut 0.3s ease-out';
+// 음성 UI 닫기
+function closeVoiceUI() {
+  // 음성 합성 중지
+  if (synthesis.speaking) {
+    synthesis.cancel();
+  }
+
+  // 음성 인식 중지
+  if (recognition && isListening) {
+    recognition.stop();
+  }
+
+  const voiceModal = document.getElementById('voice-modal');
+  if (voiceModal) {
+    voiceModal.style.animation = 'fadeOut 0.3s ease-out';
     setTimeout(() => {
-      chatModal.remove();
+      voiceModal.remove();
     }, 300);
   }
 }

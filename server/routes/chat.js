@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const ChatSession = require('../models/ChatSession');
+const Record = require('../models/Record');
 
 const API_KEY = process.env.GEMINI_API_KEY;
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-// 메모리에 채팅 세션 저장 (임시)
-// 실제 운영에서는 MongoDB에 저장 권장
-const chatSessions = new Map();
+// 메모리에 Gemini 채팅 인스턴스만 저장 (대화 기록은 DB에 저장)
+const geminiSessions = new Map();
 
 // 1. 채팅 시작
 router.post('/start', async (req, res) => {
   try {
-    const { recordData, profileData, userId } = req.body;
+    const { recordData, profileData, userId, recordId } = req.body;
 
     if (!genAI) {
       return res.status(500).json({
@@ -71,18 +72,19 @@ ${recordData.steps ? `- 걸음 수: ${recordData.steps}보` : ''}
 ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 
 **대화 가이드:**
-1. 가장 우려되는 지표(PHQ-9, PSS-10, 스트레스, 수면 등)에 대해 먼저 질문
+1. 가장 우려되는 지표에 대해 먼저 질문
 2. 짧고 명확한 질문 (한 번에 1-2개 질문만)
 3. 공감적이고 친근한 톤 유지
 4. 구체적인 상황을 파악하기 위한 후속 질문
-5. 근무 형태(3교대/상근직)와 진료과 특성을 고려한 맞춤 질문
+5. 근무 형태와 진료과 특성을 고려한 맞춤 질문
 6. 5-7번의 대화 후 종합 조언 제공
+7. **음성으로 대화하므로 자연스럽고 대화체로 응답**
 
-이제 사용자와 대화를 시작하세요. 첫 질문을 해주세요.
+이제 사용자와 음성 대화를 시작하세요. 첫 질문을 해주세요.
 `;
 
-    // 채팅 세션 시작
-    const chat = model.startChat({
+    // Gemini 채팅 세션 시작
+    const geminiChat = model.startChat({
       history: [
         {
           role: 'user',
@@ -100,22 +102,33 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     });
 
     // 첫 질문 생성
-    const result = await chat.sendMessage('사용자에게 첫 질문을 해주세요.');
+    const result = await geminiChat.sendMessage('사용자에게 첫 질문을 해주세요.');
     const firstQuestion = result.response.text();
 
-    // 세션 ID 생성 및 저장
-    const sessionId = `chat_${userId}_${Date.now()}`;
-    chatSessions.set(sessionId, {
-      chat,
+    // MongoDB에 채팅 세션 생성
+    const chatSession = new ChatSession({
       userId,
-      recordData,
-      messageCount: 1,
-      startTime: new Date(),
+      recordId,
+      messages: [
+        {
+          role: 'ai',
+          content: firstQuestion
+        }
+      ],
+      status: 'active'
+    });
+
+    await chatSession.save();
+
+    // Gemini 세션 메모리에 저장
+    geminiSessions.set(chatSession._id.toString(), {
+      geminiChat,
+      messageCount: 1
     });
 
     res.json({
       success: true,
-      sessionId,
+      sessionId: chatSession._id.toString(),
       message: firstQuestion,
     });
 
@@ -141,29 +154,52 @@ router.post('/message', async (req, res) => {
       });
     }
 
-    // 세션 가져오기
-    const session = chatSessions.get(sessionId);
-    if (!session) {
+    // DB에서 세션 가져오기
+    const chatSession = await ChatSession.findById(sessionId);
+    if (!chatSession) {
       return res.status(404).json({
         success: false,
         message: '세션을 찾을 수 없습니다.'
       });
     }
 
-    // 메시지 전송 및 응답 받기
-    const result = await session.chat.sendMessage(message);
+    // Gemini 세션 가져오기
+    const geminiSession = geminiSessions.get(sessionId);
+    if (!geminiSession) {
+      return res.status(404).json({
+        success: false,
+        message: 'AI 세션이 만료되었습니다.'
+      });
+    }
+
+    // 사용자 메시지 저장
+    chatSession.messages.push({
+      role: 'user',
+      content: message
+    });
+
+    // Gemini에 메시지 전송
+    const result = await geminiSession.geminiChat.sendMessage(message);
     const response = result.response.text();
 
+    // AI 응답 저장
+    chatSession.messages.push({
+      role: 'ai',
+      content: response
+    });
+
+    await chatSession.save();
+
     // 메시지 카운트 증가
-    session.messageCount++;
+    geminiSession.messageCount++;
 
     // 5-7번 대화 후 종료 제안
-    const shouldEnd = session.messageCount >= 6;
+    const shouldEnd = geminiSession.messageCount >= 6;
 
     res.json({
       success: true,
       message: response,
-      messageCount: session.messageCount,
+      messageCount: geminiSession.messageCount,
       shouldEnd,
     });
 
@@ -182,27 +218,44 @@ router.post('/end', async (req, res) => {
   try {
     const { sessionId } = req.body;
 
-    const session = chatSessions.get(sessionId);
-    if (!session) {
+    // DB에서 세션 가져오기
+    const chatSession = await ChatSession.findById(sessionId);
+    if (!chatSession) {
       return res.status(404).json({
         success: false,
         message: '세션을 찾을 수 없습니다.'
       });
     }
 
+    // Gemini 세션 가져오기
+    const geminiSession = geminiSessions.get(sessionId);
+    if (!geminiSession) {
+      return res.status(404).json({
+        success: false,
+        message: 'AI 세션이 만료되었습니다.'
+      });
+    }
+
     // 최종 종합 조언 요청
-    const result = await session.chat.sendMessage(
+    const result = await geminiSession.geminiChat.sendMessage(
       '대화 내용을 바탕으로 종합적인 건강 조언을 3-5가지 제공해주세요. 구체적이고 실천 가능한 조언이어야 합니다.'
     );
     const finalAdvice = result.response.text();
 
-    // 세션 삭제
-    chatSessions.delete(sessionId);
+    // 최종 조언 저장
+    chatSession.finalAdvice = finalAdvice;
+    chatSession.status = 'ended';
+    chatSession.endedAt = new Date();
+
+    await chatSession.save();
+
+    // 메모리에서 Gemini 세션 삭제
+    geminiSessions.delete(sessionId);
 
     res.json({
       success: true,
       advice: finalAdvice,
-      totalMessages: session.messageCount,
+      totalMessages: chatSession.messages.length,
     });
 
   } catch (error) {
@@ -219,9 +272,9 @@ router.post('/end', async (req, res) => {
 router.get('/session/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const session = chatSessions.get(sessionId);
 
-    if (!session) {
+    const chatSession = await ChatSession.findById(sessionId);
+    if (!chatSession) {
       return res.status(404).json({
         success: false,
         message: '세션을 찾을 수 없습니다.'
@@ -230,14 +283,38 @@ router.get('/session/:sessionId', async (req, res) => {
 
     res.json({
       success: true,
-      messageCount: session.messageCount,
-      startTime: session.startTime,
+      session: chatSession
     });
 
   } catch (error) {
     res.status(500).json({
       success: false,
       message: '세션 정보 조회 실패',
+      error: error.message
+    });
+  }
+});
+
+// 5. 사용자의 최근 대화 기록 조회 (AI 분석 시 사용)
+router.get('/history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { limit = 5 } = req.query;
+
+    const sessions = await ChatSession.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .select('messages finalAdvice createdAt status');
+
+    res.json({
+      success: true,
+      sessions
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: '대화 기록 조회 실패',
       error: error.message
     });
   }

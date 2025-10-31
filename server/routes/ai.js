@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const ChatSession = require('../models/ChatSession');
 
 // Gemini API 키를 환경변수에서 가져옴
 const API_KEY = process.env.GEMINI_API_KEY;
@@ -14,7 +15,7 @@ const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 // 일일 기록 분석
 router.post('/analyze-daily', async (req, res) => {
   try {
-    const { recordData, profileData } = req.body;
+    const { recordData, profileData, userId } = req.body;
 
     if (!recordData) {
       return res.status(400).json({ success: false, message: '기록 데이터가 필요합니다.' });
@@ -29,6 +30,41 @@ router.post('/analyze-daily', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+    // 과거 대화 기록 조회 (최근 3개)
+    let conversationContext = '';
+    if (userId) {
+      try {
+        const recentSessions = await ChatSession.find({ userId })
+          .sort({ createdAt: -1 })
+          .limit(3)
+          .select('messages finalAdvice createdAt');
+
+        if (recentSessions.length > 0) {
+          conversationContext = '\n**과거 AI 상담 인사이트:**\n';
+          recentSessions.forEach((session, index) => {
+            const date = new Date(session.createdAt).toLocaleDateString('ko-KR');
+            conversationContext += `\n[${date} 상담]\n`;
+
+            // 주요 대화 내용 요약 (마지막 몇 개 메시지)
+            const lastMessages = session.messages.slice(-4); // 마지막 4개 메시지
+            const userMessages = lastMessages.filter(m => m.role === 'user').map(m => m.content);
+            if (userMessages.length > 0) {
+              conversationContext += `- 사용자 주요 언급: ${userMessages.join(', ')}\n`;
+            }
+
+            // 최종 조언
+            if (session.finalAdvice) {
+              conversationContext += `- AI 조언: ${session.finalAdvice.substring(0, 200)}...\n`;
+            }
+          });
+          conversationContext += '\n위 과거 상담 내용을 참고하여, 지속적이고 일관된 건강 관리 조언을 제공해주세요.\n';
+        }
+      } catch (error) {
+        console.error('대화 기록 조회 오류:', error);
+        // 대화 기록 조회 실패해도 분석은 계속 진행
+      }
+    }
+
     // 프롬프트 생성
     const prompt = `
 당신은 전문 간호사 건강 관리 AI 어시스턴트입니다. 아래의 일일 건강 기록을 분석하고 맞춤형 조언을 제공해주세요.
@@ -36,8 +72,14 @@ router.post('/analyze-daily', async (req, res) => {
 **사용자 프로필:**
 - 연령: ${profileData?.age || '정보 없음'}세
 - 성별: ${profileData?.gender || '정보 없음'}
-- 직업: ${profileData?.occupation || '정보 없음'}
+- 경력: ${profileData?.yearsOfExperience || '정보 없음'}년차
+- 직책: ${profileData?.position || '정보 없음'}
+- 진료과: ${profileData?.department || '정보 없음'}
 - 만성질환: ${profileData?.chronicDiseases?.length > 0 ? profileData.chronicDiseases.map(d => d.disease).join(', ') : '없음'}
+
+**오늘의 근무 정보:**
+- 근무 형태: ${recordData.workType || '정보 없음'}
+${recordData.shiftType ? `- 근무 시간: ${recordData.shiftType}` : ''}
 
 **오늘의 기록:**
 - 스트레스 수준: ${recordData.stressLevel}/10
@@ -46,10 +88,12 @@ router.post('/analyze-daily', async (req, res) => {
 - 업무 강도: ${recordData.workIntensity}/10
 - 식사: ${recordData.meals?.join(', ') || '기록 안 함'}
 - PSS-10 점수: ${recordData.pssTotal}/40 (${recordData.pssTotal <= 13 ? '낮음' : recordData.pssTotal <= 26 ? '보통' : '높음'})
+- PHQ-9 점수: ${recordData.phq9Total}/27 (${recordData.phq9Total <= 4 ? '최소화' : recordData.phq9Total <= 9 ? '가벼움' : recordData.phq9Total <= 14 ? '중간' : recordData.phq9Total <= 19 ? '중간-심함' : '심함'})
 ${recordData.bloodSugar ? `- 혈당: ${recordData.bloodSugar}mg/dL` : ''}
 ${recordData.bloodPressureSystolic ? `- 혈압: ${recordData.bloodPressureSystolic}/${recordData.bloodPressureDiastolic}mmHg` : ''}
 ${recordData.steps ? `- 걸음 수: ${recordData.steps}보` : ''}
 ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
+${conversationContext}
 
 다음 형식으로 분석 결과를 제공해주세요:
 
@@ -66,6 +110,7 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 잘하고 있는 부분에 대한 격려 (1-2문장)
 
 한국어로 작성하고, 친근하면서도 전문적인 톤으로 작성해주세요. 각 섹션은 반드시 ## 제목으로 시작해주세요.
+${conversationContext ? '과거 상담 내용을 고려하여 일관되고 지속적인 조언을 제공해주세요.' : ''}
 `;
 
     const result = await model.generateContent(prompt);
