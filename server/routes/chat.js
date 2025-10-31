@@ -132,13 +132,13 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     // Gemini 채팅 세션 시작 (history 없이 바로 시작)
     const geminiChat = model.startChat({
       generationConfig: {
-        maxOutputTokens: 300,
+        maxOutputTokens: 150, // 짧은 질문만 생성
         temperature: 0.8,
       },
     });
 
-    // 첫 질문 생성 (시스템 프롬프트와 함께)
-    const firstPrompt = systemPrompt + '\n\n사용자에게 첫 질문을 자연스럽고 친근하게 해주세요.';
+    // 첫 질문 생성 (간단한 지시문)
+    const firstPrompt = systemPrompt + '\n\n사용자에게 오늘 하루 어땠는지, 또는 가장 힘들었던 점이 무엇인지 짧고 간단하게 물어보세요. 1-2문장으로만 질문하세요.';
 
     console.log('Gemini에 요청 전송 중...');
     console.log('모델:', model._modelName);
@@ -149,10 +149,27 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     try {
       result = await geminiChat.sendMessage(firstPrompt);
       console.log('Gemini 응답 받음');
-      console.log('result.response:', result.response);
 
-      firstQuestion = result.response.text();
+      // candidates에서 직접 텍스트 추출
+      if (result.response.candidates && result.response.candidates.length > 0) {
+        const candidate = result.response.candidates[0];
+
+        // content.parts에서 텍스트 추출
+        if (candidate.content && candidate.content.parts) {
+          firstQuestion = candidate.content.parts
+            .filter(part => part.text)
+            .map(part => part.text)
+            .join('');
+        }
+      }
+
+      // text() 메서드도 시도
+      if (!firstQuestion || firstQuestion.trim().length === 0) {
+        firstQuestion = result.response.text();
+      }
+
       console.log('Gemini 첫 질문 응답:', firstQuestion);
+      console.log('finishReason:', result.response.candidates?.[0]?.finishReason);
     } catch (err) {
       console.error('Gemini API 호출 오류:', err);
       throw new Error(`Gemini API 호출 실패: ${err.message}`);
@@ -160,7 +177,7 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 
     // 응답 검증
     if (!firstQuestion || firstQuestion.trim().length === 0) {
-      console.error('빈 응답 받음. result:', JSON.stringify(result, null, 2));
+      console.error('빈 응답 받음. candidates:', JSON.stringify(result.response.candidates, null, 2));
       throw new Error('Gemini API가 빈 응답을 반환했습니다.');
     }
 
