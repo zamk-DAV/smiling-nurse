@@ -126,26 +126,17 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 `;
     }
 
-    // Gemini 채팅 세션 시작
+    // Gemini 채팅 세션 시작 (history 없이 바로 시작)
     const geminiChat = model.startChat({
-      history: [
-        {
-          role: 'user',
-          parts: [{ text: systemPrompt }]
-        },
-        {
-          role: 'model',
-          parts: [{ text: '네, 이해했습니다. 사용자의 건강 상태를 파악하기 위해 대화를 시작하겠습니다.' }]
-        }
-      ],
       generationConfig: {
-        maxOutputTokens: 200,
-        temperature: 0.7,
+        maxOutputTokens: 300,
+        temperature: 0.8,
       },
     });
 
-    // 첫 질문 생성
-    const result = await geminiChat.sendMessage('사용자에게 첫 질문을 해주세요.');
+    // 첫 질문 생성 (시스템 프롬프트와 함께)
+    const firstPrompt = systemPrompt + '\n\n사용자에게 첫 질문을 자연스럽고 친근하게 해주세요.';
+    const result = await geminiChat.sendMessage(firstPrompt);
     const firstQuestion = result.response.text();
 
     console.log('Gemini 첫 질문 응답:', firstQuestion);
