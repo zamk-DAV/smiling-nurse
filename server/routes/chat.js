@@ -22,7 +22,7 @@ router.post('/start', async (req, res) => {
       });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // PHQ-9 해석
     let phq9Level = '정보 없음';
@@ -148,6 +148,13 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     const result = await geminiChat.sendMessage('사용자에게 첫 질문을 해주세요.');
     const firstQuestion = result.response.text();
 
+    console.log('Gemini 첫 질문 응답:', firstQuestion);
+
+    // 응답 검증
+    if (!firstQuestion || firstQuestion.trim().length === 0) {
+      throw new Error('Gemini API가 빈 응답을 반환했습니다.');
+    }
+
     // MongoDB에 채팅 세션 생성
     const chatSession = new ChatSession({
       userId,
@@ -155,7 +162,7 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
       messages: [
         {
           role: 'ai',
-          content: firstQuestion
+          content: firstQuestion.trim()
         }
       ],
       status: 'active',

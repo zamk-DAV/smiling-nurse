@@ -409,6 +409,12 @@ function updateSpeakingStatus(speaking) {
 // 대화 모드 시작 함수 (폼 작성 중 대화)
 async function startConversationMode() {
   const userId = localStorage.getItem('userId');
+
+  if (!userId) {
+    showAlert('로그인이 필요합니다.', 'error');
+    return;
+  }
+
   const form = document.getElementById('daily-check-form');
   const formData = new FormData(form);
 
@@ -439,15 +445,30 @@ async function startConversationMode() {
     notes: formData.get('notes') || ''
   };
 
+  console.log('대화 모드 시작 - userId:', userId);
+  console.log('부분 폼 데이터:', partialRecordData);
+
   try {
     // 프로필 데이터 가져오기
+    console.log('프로필 데이터 요청 중...');
     const profileResponse = await fetch(`${API_URL}/user/profile/${userId}`);
+
+    if (!profileResponse.ok) {
+      throw new Error(`프로필 조회 실패: ${profileResponse.status}`);
+    }
+
     const profileData = await profileResponse.json();
+    console.log('프로필 데이터:', profileData);
+
+    if (!profileData.success) {
+      throw new Error('프로필 데이터를 가져올 수 없습니다.');
+    }
 
     // 음성 대화 UI 표시
     showVoiceUI();
 
     // 채팅 세션 시작 (recordId 없이, 대화 모드)
+    console.log('채팅 세션 시작 요청 중...');
     const response = await fetch(`${API_URL}/chat/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -460,7 +481,14 @@ async function startConversationMode() {
       })
     });
 
+    console.log('채팅 세션 응답 상태:', response.status);
+
+    if (!response.ok) {
+      throw new Error(`채팅 세션 시작 실패: ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log('채팅 세션 응답:', data);
 
     if (data.success) {
       // 세션 ID 저장
@@ -474,13 +502,13 @@ async function startConversationMode() {
       // 음성 인식 설정
       setupVoiceRecognition();
     } else {
-      showAlert('음성 대화 시작에 실패했습니다.', 'error');
+      showAlert(`음성 대화 시작에 실패했습니다: ${data.message}`, 'error');
       closeVoiceUI();
       conversationMode = false;
     }
   } catch (error) {
-    console.error('음성 대화 시작 오류:', error);
-    showAlert('음성 대화 시작 중 오류가 발생했습니다.', 'error');
+    console.error('음성 대화 시작 오류 상세:', error);
+    showAlert(`음성 대화 시작 중 오류가 발생했습니다: ${error.message}`, 'error');
     closeVoiceUI();
     conversationMode = false;
   }
