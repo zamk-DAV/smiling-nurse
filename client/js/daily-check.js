@@ -310,6 +310,14 @@ let recognition = null;
 let synthesis = window.speechSynthesis;
 let isListening = false;
 let isSpeaking = false;
+let isProcessing = false; // AI 응답 대기 중
+
+// Web Audio API for volume detection
+let audioContext = null;
+let analyser = null;
+let microphone = null;
+let volumeCheckInterval = null;
+const VOLUME_THRESHOLD = -50; // 데시벨 임계값 (조정 가능)
 let conversationMode = false; // 대화 모드 (저장 없이 대화만)
 
 // 음성 인식 초기화
@@ -327,6 +335,74 @@ function initSpeechRecognition() {
   recognition.interimResults = false;
 
   return recognition;
+}
+
+// Web Audio API 초기화 (볼륨 측정용)
+async function initAudioContext() {
+  try {
+    // AudioContext 생성
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
+
+    // 마이크 접근
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    microphone = audioContext.createMediaStreamSource(stream);
+
+    // Analyser 노드 생성
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.8;
+
+    microphone.connect(analyser);
+
+    console.log('✅ Web Audio API 초기화 완료');
+  } catch (error) {
+    console.error('Web Audio API 초기화 실패:', error);
+    showAlert('마이크 접근 권한이 필요합니다.', 'error');
+  }
+}
+
+// 현재 볼륨 레벨 측정 (데시벨)
+function getVolumeLevel() {
+  if (!analyser) return -100;
+
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(dataArray);
+
+  // 평균 볼륨 계산
+  const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+
+  // 데시벨로 변환 (0-255 범위를 -100 ~ 0 dB로 변환)
+  const decibels = average > 0 ? 20 * Math.log10(average / 255) : -100;
+
+  return decibels;
+}
+
+// 볼륨 체크하여 음성 인식 시작 여부 결정
+function checkAndStartRecognition() {
+  if (!analyser || !recognition) return;
+
+  const volume = getVolumeLevel();
+  console.log('현재 볼륨:', volume.toFixed(2), 'dB');
+
+  // 임계값 이상일 때만 음성 인식 시작
+  if (volume > VOLUME_THRESHOLD) {
+    // 볼륨 체크 중지
+    if (volumeCheckInterval) {
+      clearInterval(volumeCheckInterval);
+      volumeCheckInterval = null;
+    }
+
+    // 음성 인식 시작
+    try {
+      recognition.start();
+      console.log('✅ 볼륨 임계값 초과, 음성 인식 시작');
+    } catch (error) {
+      console.error('음성 인식 시작 오류:', error);
+      isListening = false;
+      updateSpeakingStatus(false);
+    }
+  }
 }
 
 // 텍스트를 음성으로 변환 (TTS)
@@ -397,9 +473,14 @@ function updateSpeakingStatus(speaking) {
       statusDiv.innerHTML = '🔊 AI가 말하는 중...';
       statusDiv.style.color = 'var(--primary-green)';
       if (micButton) micButton.disabled = true;
+    } else if (isProcessing) {
+      statusDiv.innerHTML = '🤔 AI가 생각하는 중...';
+      statusDiv.style.color = '#FFA500';
+      if (micButton) micButton.disabled = true;
     } else if (isListening) {
       statusDiv.innerHTML = '🎤 듣고 있습니다...';
       statusDiv.style.color = '#FF6B6B';
+      if (micButton) micButton.disabled = true;
     } else {
       statusDiv.innerHTML = '💬 마이크 버튼을 눌러 말씀해주세요';
       statusDiv.style.color = 'var(--text-gray)';
@@ -424,6 +505,11 @@ async function startConversationMode() {
   const recognitionInstance = initSpeechRecognition();
   if (!recognitionInstance) {
     return;
+  }
+
+  // Web Audio API 초기화 (소음 제한용)
+  if (!audioContext) {
+    await initAudioContext();
   }
 
   // 대화 모드 활성화
@@ -708,23 +794,47 @@ function setupVoiceRecognition() {
 
 // 음성 인식 시작
 function startListening() {
-  if (!recognition || isListening || isSpeaking) return;
+  if (!recognition || isListening || isSpeaking || isProcessing) return;
 
   isListening = true;
   updateSpeakingStatus(false);
 
-  try {
-    recognition.start();
-  } catch (error) {
-    console.error('음성 인식 시작 오류:', error);
-    isListening = false;
-    updateSpeakingStatus(false);
+  // Web Audio API 사용 가능한 경우: 볼륨 체크 후 시작
+  if (analyser) {
+    console.log('볼륨 체크 모드: 임계값', VOLUME_THRESHOLD, 'dB 이상일 때 음성 인식 시작');
+
+    // 100ms마다 볼륨 체크
+    volumeCheckInterval = setInterval(checkAndStartRecognition, 100);
+
+    // 5초 후에도 시작 안 되면 자동 취소
+    setTimeout(() => {
+      if (volumeCheckInterval) {
+        clearInterval(volumeCheckInterval);
+        volumeCheckInterval = null;
+        isListening = false;
+        updateSpeakingStatus(false);
+        showAlert('음성이 감지되지 않았습니다. 조용한 환경에서 더 크게 말씀해주세요.', 'warning');
+      }
+    }, 5000);
+  } else {
+    // Web Audio API 없으면 기존 방식대로
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('음성 인식 시작 오류:', error);
+      isListening = false;
+      updateSpeakingStatus(false);
+    }
   }
 }
 
 // 음성 메시지 전송
 async function sendVoiceMessage(message) {
   try {
+    // AI 응답 대기 중 상태로 변경
+    isProcessing = true;
+    updateSpeakingStatus(false);
+
     const response = await fetch(`${API_URL}/chat/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -735,6 +845,10 @@ async function sendVoiceMessage(message) {
     });
 
     const data = await response.json();
+
+    // AI 응답 받음 - 처리 중 상태 해제
+    isProcessing = false;
+    updateSpeakingStatus(false);
 
     if (data.success) {
       // AI 응답 표시 및 음성 출력
@@ -761,6 +875,8 @@ async function sendVoiceMessage(message) {
     }
   } catch (error) {
     console.error('메시지 전송 오류:', error);
+    isProcessing = false;
+    updateSpeakingStatus(false);
     showAlert('메시지 전송 중 오류가 발생했습니다.', 'error');
   }
 }
@@ -825,9 +941,30 @@ function closeVoiceUI() {
     recognition.stop();
   }
 
+  // 볼륨 체크 인터벌 중지
+  if (volumeCheckInterval) {
+    clearInterval(volumeCheckInterval);
+    volumeCheckInterval = null;
+  }
+
+  // Web Audio API 리소스 정리
+  if (microphone) {
+    microphone.disconnect();
+    microphone = null;
+  }
+  if (analyser) {
+    analyser.disconnect();
+    analyser = null;
+  }
+  if (audioContext && audioContext.state !== 'closed') {
+    audioContext.close();
+    audioContext = null;
+  }
+
   // 상태 초기화
   isSpeaking = false;
   isListening = false;
+  isProcessing = false;
 
   const voiceModal = document.getElementById('voice-modal');
   if (voiceModal) {
