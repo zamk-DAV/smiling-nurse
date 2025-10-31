@@ -35,6 +35,11 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes);
 
+// Health check endpoint (Render용)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // 기본 라우트
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/index.html'));
