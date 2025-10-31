@@ -201,7 +201,9 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     geminiSessions.set(chatSession._id.toString(), {
       geminiChat,
       messageCount: 1,
-      conversationMode: conversationMode || false
+      conversationMode: conversationMode || false,
+      isClosingQuestion: false,
+      shouldEnd: false
     });
 
     res.json({
@@ -223,7 +225,7 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
 // 2. 대화 계속하기
 router.post('/message', async (req, res) => {
   try {
-    const { sessionId, message } = req.body;
+    const { sessionId, message, continueConversation } = req.body;
 
     if (!sessionId || !message) {
       return res.status(400).json({
@@ -250,15 +252,54 @@ router.post('/message', async (req, res) => {
       });
     }
 
+    // continueConversation 플래그가 true면 카운트 리셋하지 않고 계속 진행
+    if (continueConversation) {
+      geminiSession.messageCount = 3; // 카운트를 낮춰서 더 대화할 수 있게
+      geminiSession.isClosingQuestion = false;
+    }
+
     // 사용자 메시지 저장
     chatSession.messages.push({
       role: 'user',
       content: message
     });
 
-    // Gemini에 메시지 전송
-    const result = await geminiSession.geminiChat.sendMessage(message);
-    const response = result.response.text();
+    let response;
+
+    // 종료 질문 모드인지 확인
+    if (geminiSession.isClosingQuestion) {
+      // 사용자 응답 분석: 계속하고 싶은지 종료하고 싶은지
+      const continueKeywords = ['네', '예', '응', '그래', '계속', '더', '이어', '말하고', '있어', '해', '하고'];
+      const endKeywords = ['아니', '아뇨', '괜찮', '됐어', '충분', '종료', '끝', '그만', '됐습니다'];
+
+      const messageLower = message.toLowerCase().replace(/\s/g, '');
+      const wantsToContinue = continueKeywords.some(keyword => messageLower.includes(keyword));
+      const wantsToEnd = endKeywords.some(keyword => messageLower.includes(keyword));
+
+      if (wantsToContinue && !wantsToEnd) {
+        // 대화 계속 진행
+        geminiSession.messageCount = 3; // 카운트를 낮춰서 더 대화
+        geminiSession.isClosingQuestion = false;
+
+        const continuePrompt = `사용자가 더 이야기하고 싶다고 했습니다. 따뜻하게 격려하며 계속 대화를 이어가세요. 사용자가 하고 싶은 이야기나 추가로 고민되는 부분이 있는지 물어보세요. 짧고 자연스럽게 질문하세요.`;
+        const result = await geminiSession.geminiChat.sendMessage(continuePrompt);
+        response = result.response.text();
+      } else if (wantsToEnd) {
+        // 종료 의사 표현
+        geminiSession.shouldEnd = true;
+        const endPrompt = `사용자가 대화를 마치고 싶다고 했습니다. 따뜻한 마무리 인사를 1-2문장으로 짧게 전해주세요.`;
+        const result = await geminiSession.geminiChat.sendMessage(endPrompt);
+        response = result.response.text();
+      } else {
+        // 애매한 응답: 일반 대화로 처리
+        const result = await geminiSession.geminiChat.sendMessage(message);
+        response = result.response.text();
+      }
+    } else {
+      // 일반 대화 모드
+      const result = await geminiSession.geminiChat.sendMessage(message);
+      response = result.response.text();
+    }
 
     // AI 응답 저장
     chatSession.messages.push({
@@ -271,15 +312,35 @@ router.post('/message', async (req, res) => {
     // 메시지 카운트 증가
     geminiSession.messageCount++;
 
-    // 4회 대화 후 종료 제안, 최대 6회
-    // messageCount: 1(첫질문), 2(2번째), 3(3번째), 4(4번째), 5(5번째=4회 대답완료)
-    const shouldEnd = geminiSession.messageCount >= 5; // 4회 이상
+    // 4회 대화 후 종료 제안
+    let shouldEnd = false;
+    let isClosingQuestion = false;
+
+    if (geminiSession.messageCount >= 5 && !geminiSession.isClosingQuestion && !geminiSession.shouldEnd) {
+      // 자연스러운 종료 질문 생성
+      const closingPrompt = `이제 충분한 대화를 나눴습니다. 대화를 자연스럽게 마무리하면서 "혹시 더 하고 싶은 말씀이 있으신가요?" 또는 "더 이야기 나누고 싶은 부분이 있으신가요?" 같은 식으로 사용자에게 계속 대화할지 물어보세요. 따뜻하고 친근한 톤으로 2-3문장으로 작성해주세요.`;
+
+      const closingResult = await geminiSession.geminiChat.sendMessage(closingPrompt);
+      const closingResponse = closingResult.response.text();
+
+      // 종료 질문 저장
+      chatSession.messages.push({
+        role: 'ai',
+        content: closingResponse
+      });
+      await chatSession.save();
+
+      geminiSession.isClosingQuestion = true;
+      isClosingQuestion = true;
+      response = closingResponse;
+    }
 
     res.json({
       success: true,
       message: response,
       messageCount: geminiSession.messageCount,
-      shouldEnd,
+      shouldEnd: geminiSession.shouldEnd || false,
+      isClosingQuestion,
     });
 
   } catch (error) {

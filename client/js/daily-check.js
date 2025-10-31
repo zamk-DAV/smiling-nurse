@@ -743,10 +743,18 @@ async function sendVoiceMessage(message) {
 
       window.chatMessageCount = data.messageCount || 0;
 
-      // 5-7번 대화 후 종료 제안 (음성으로)
+      // 종료 질문인 경우: 사용자가 계속 대화할지 물어본 상태
+      if (data.isClosingQuestion) {
+        // 다음 사용자 응답을 기다림 (계속할지 종료할지 결정)
+        console.log('종료 질문 모드 활성화');
+      }
+
+      // 사용자가 종료를 원하는 경우
       if (data.shouldEnd) {
-        const endMessage = '충분히 대화를 나눴습니다. 종료 버튼을 눌러 최종 건강 조언을 받아보세요.';
-        await speak(endMessage);
+        // 마무리 인사 후 자동으로 종료 프로세스 시작
+        setTimeout(() => {
+          endVoiceSession();
+        }, 2000);
       }
     } else {
       showAlert('메시지 전송에 실패했습니다.', 'error');
