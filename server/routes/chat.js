@@ -22,14 +22,10 @@ router.post('/start', async (req, res) => {
       });
     }
 
-    // 모델명 시도 순서: gemini-2.0-flash-exp -> gemini-1.5-pro
-    let model;
-    try {
-      model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-    } catch (err) {
-      console.log('gemini-2.0-flash-exp 사용 불가, gemini-1.5-pro 시도');
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-    }
+    // gemini-2.5-flash 모델 사용 (API key와 함께)
+    const model = genAI.getGenerativeModel({
+      model: 'models/gemini-2.5-flash'
+    });
 
     // PHQ-9 해석
     let phq9Level = '정보 없음';
