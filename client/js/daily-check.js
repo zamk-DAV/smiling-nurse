@@ -343,16 +343,23 @@ function speak(text) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.rate = 1.3; // 1.0 → 1.3 (30% 빠르게)
+    utterance.pitch = 1.1; // 1.0 → 1.1 (약간 높게, 더 생동감)
     utterance.volume = 1.0;
 
     // 한국어 음성 선택 (브라우저가 로드될 때까지 대기)
     const setVoiceAndSpeak = () => {
       const voices = synthesis.getVoices();
-      const koreanVoice = voices.find(voice => voice.lang.startsWith('ko'));
+
+      // 더 자연스러운 음성 우선 선택 (Google 한국어 음성 선호)
+      const koreanVoice =
+        voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('ko')) ||
+        voices.find(voice => voice.name.includes('Female') && voice.lang.startsWith('ko')) ||
+        voices.find(voice => voice.lang.startsWith('ko'));
+
       if (koreanVoice) {
         utterance.voice = koreanVoice;
+        console.log('선택된 음성:', koreanVoice.name);
       }
 
       utterance.onstart = () => {

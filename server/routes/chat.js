@@ -132,7 +132,7 @@ ${recordData.notes ? `- 메모: "${recordData.notes}"` : ''}
     // Gemini 채팅 세션 시작 (history 없이 바로 시작)
     const geminiChat = model.startChat({
       generationConfig: {
-        maxOutputTokens: 1000, // 충분한 토큰 할당
+        maxOutputTokens: 3000, // 더 긴 대화 지원
         temperature: 0.8,
       },
     });
