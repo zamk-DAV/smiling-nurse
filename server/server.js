@@ -27,11 +27,13 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const recordsRoutes = require('./routes/records');
 const aiRoutes = require('./routes/ai');
+const chatRoutes = require('./routes/chat');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/records', recordsRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/chat', chatRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {

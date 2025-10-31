@@ -20,6 +20,12 @@ const UserSchema = new mongoose.Schema({
     height: { type: Number },
     weight: { type: Number },
     occupation: { type: String },
+
+    // 간호사 전용 정보
+    yearsOfExperience: { type: Number }, // 몇년차 간호사
+    position: { type: String }, // 직책 (일반 간호사, 수간호사, 책임간호사 등)
+    department: { type: String }, // 진료과 (내과, 외과, 응급실 등)
+
     chronicDiseases: [{
       disease: String,
       detail: String

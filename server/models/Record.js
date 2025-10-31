@@ -12,6 +12,16 @@ const RecordSchema = new mongoose.Schema({
     default: Date.now
   },
 
+  // 근무 정보
+  workType: {
+    type: String,
+    enum: ['3교대', '상근직']
+  },
+  shiftType: {
+    type: String,
+    enum: ['데이(Day)', '이브닝(Evening)', '나이트(Night)', null]
+  },
+
   // 기록 데이터 (daily-check.html 참고)
   stressLevel: {
     type: Number,
@@ -47,7 +57,9 @@ const RecordSchema = new mongoose.Schema({
 
   bloodPressureDiastolic: Number, // 이완기 혈압
 
-  pssTotal: Number, // PSS 검사 총점
+  pssTotal: Number, // PSS-10 검사 총점 (0-40점)
+
+  phq9Total: Number, // PHQ-9 검사 총점 (0-27점)
 
   notes: String // 메모
 

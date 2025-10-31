@@ -122,6 +122,27 @@
         <div class="card" style="background: var(--light-green); margin-bottom: 24px; padding: 24px;">
           <h2 style="color: var(--primary-green); margin-bottom: 20px;">📊 오늘의 상태</h2>
 
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label for="work-type">근무 형태</label>
+              <select id="work-type" name="workType" required>
+                <option value="">선택하세요</option>
+                <option value="3교대">3교대</option>
+                <option value="상근직">상근직</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="shift-type-group" style="display: none;">
+              <label for="shift-type">근무 시간</label>
+              <select id="shift-type" name="shiftType">
+                <option value="">선택하세요</option>
+                <option value="데이(Day)">데이 (Day)</option>
+                <option value="이브닝(Evening)">이브닝 (Evening)</option>
+                <option value="나이트(Night)">나이트 (Night)</option>
+              </select>
+            </div>
+          </div>
+
           <div class="form-group">
             <label for="stress-level">오늘의 스트레스 수준 (1-10점)</label>
             <input type="range" id="stress-level" name="stressLevel" min="1" max="10" value="5" step="1" style="width: 100%;" 
@@ -226,12 +247,12 @@
         </div>
 
         <div class="card" style="background: var(--accent-pink); margin-bottom: 24px; padding: 24px;">
-          <h2 style="color: var(--primary-green); margin-bottom: 12px;">🧠 스트레스 인지 척도 (PSS-10)</h2>
-          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">지난 한 달 동안의 경험을 생각하며 각 질문에 답해주세요.</p>
+          <h2 style="color: var(--primary-green); margin-bottom: 12px;">🧠 지각된 스트레스 척도 (PSS-10)</h2>
+          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">최근 1개월 동안 당신이 느끼고 생각한 것에 대한 질문입니다. 각 문항의 내용을 얼마나 자주 느꼈는지 표시해주세요.</p>
 
           <div class="pss-questions">
             <div class="form-group">
-              <label>1. 지난 한 달 동안, 예상치 못한 일이 발생해서 기분이 상한 적이 얼마나 있었습니까?</label>
+              <label>1. 최근 1개월 동안, 예상치 못했던 일 때문에 당황했던 적이 얼마나 있었습니까?</label>
               <select name="pss1" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -243,7 +264,7 @@
             </div>
 
             <div class="form-group">
-              <label>2. 지난 한 달 동안, 중요한 일들을 통제할 수 없다고 느낀 적이 얼마나 있었습니까?</label>
+              <label>2. 최근 1개월 동안, 인생에서 중요한 일들을 조절할 수 없다는 느낌을 경험하였습니까?</label>
               <select name="pss2" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -255,7 +276,7 @@
             </div>
 
             <div class="form-group">
-              <label>3. 지난 한 달 동안, 신경이 예민해지고 스트레스를 받은 적이 얼마나 있었습니까?</label>
+              <label>3. 최근 1개월 동안, 신경이 예민해지고 스트레스를 받고 있다는 느낌을 얼마나 경험하였습니까?</label>
               <select name="pss3" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -267,7 +288,7 @@
             </div>
 
             <div class="form-group">
-              <label>4. 지난 한 달 동안, 개인적인 문제들을 다루는 데 있어 자신감을 느낀 적이 얼마나 있었습니까?</label>
+              <label>4. 최근 1개월 동안, 당신의 개인적 문제들을 다루는데 있어서 얼마나 자주 자신감을 느끼셨습니까?</label>
               <select name="pss4" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -279,7 +300,7 @@
             </div>
 
             <div class="form-group">
-              <label>5. 지난 한 달 동안, 일들이 자신의 뜻대로 진행되고 있다고 느낀 적이 얼마나 있었습니까?</label>
+              <label>5. 최근 1개월 동안, 일상의 일들이 당신의 생각대로 진행되고 있다는 느낌을 얼마나 경험하였습니까?</label>
               <select name="pss5" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -291,7 +312,7 @@
             </div>
 
             <div class="form-group">
-              <label>6. 지난 한 달 동안, 해야 할 일들이 너무 많이 쌓여서 감당할 수 없다고 느낀 적이 얼마나 있었습니까?</label>
+              <label>6. 최근 1개월 동안, 당신이 꼭 해야 하는 일을 처리할 수 없다고 생각한 적이 얼마나 있었습니까?</label>
               <select name="pss6" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -303,7 +324,7 @@
             </div>
 
             <div class="form-group">
-              <label>7. 지난 한 달 동안, 일상생활의 짜증을 잘 다룰 수 있었던 적이 얼마나 있었습니까?</label>
+              <label>7. 최근 1개월 동안, 일상생활의 짜증을 얼마나 자주 잘 다스릴 수 있었습니까?</label>
               <select name="pss7" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -315,7 +336,7 @@
             </div>
 
             <div class="form-group">
-              <label>8. 지난 한 달 동안, 자신이 모든 일을 잘 처리하고 있다고 느낀 적이 얼마나 있었습니까?</label>
+              <label>8. 최근 1개월 동안, 최상의 컨디션이라고 얼마나 자주 느끼셨습니까?</label>
               <select name="pss8" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -327,7 +348,7 @@
             </div>
 
             <div class="form-group">
-              <label>9. 지난 한 달 동안, 통제할 수 없는 일들 때문에 화가 난 적이 얼마나 있었습니까?</label>
+              <label>9. 최근 1개월 동안, 당신이 통제할 수 없는 일 때문에 화가 난 경험이 얼마나 있었습니까?</label>
               <select name="pss9" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -339,7 +360,7 @@
             </div>
 
             <div class="form-group">
-              <label>10. 지난 한 달 동안, 어려움이 너무 많이 쌓여서 극복할 수 없다고 느낀 적이 얼마나 있었습니까?</label>
+              <label>10. 최근 1개월 동안, 어려운 일들이 너무 많이 쌓여서 극복하지 못할 것 같다고 느낀 적이 얼마나 있었습니까?</label>
               <select name="pss10" required>
                 <option value="">선택하세요</option>
                 <option value="0">0 - 전혀 없었다</option>
@@ -347,6 +368,112 @@
                 <option value="2">2 - 때때로 있었다</option>
                 <option value="3">3 - 자주 있었다</option>
                 <option value="4">4 - 매우 자주 있었다</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="background: var(--accent-blue); margin-bottom: 24px; padding: 24px;">
+          <h2 style="color: var(--primary-green); margin-bottom: 12px;">💙 우울증 건강설문 (PHQ-9)</h2>
+          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까? 해당하는 날을 헤아려서 표시해주세요.</p>
+
+          <div class="phq9-questions">
+            <div class="form-group">
+              <label>1. 기분이 가라앉거나, 우울하거나, 희망이 없다고 느꼈다.</label>
+              <select name="phq91" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>2. 평소 하던 일에 대한 흥미가 없어지거나 즐거움을 느끼지 못했다.</label>
+              <select name="phq92" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>3. 잠들기가 어렵거나 자주 깼다 / 혹은 너무 많이 잤다.</label>
+              <select name="phq93" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>4. 평소보다 식욕이 줄었다 / 혹은 평소보다 많이 먹었다.</label>
+              <select name="phq94" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>5. 다른 사람들이 눈치챌 정도로 평소보다 말과 행동이 느려졌다 / 혹은 너무 안절부절 못해서 가만히 앉아 있을 수 없었다.</label>
+              <select name="phq95" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>6. 피곤하고 기운이 없었다.</label>
+              <select name="phq96" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>7. 내가 잘못 했거나, 실패했다는 생각이 들었다 / 혹은 자신과 가족을 실망시켰다고 생각했다.</label>
+              <select name="phq97" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>8. 신문을 보거나 TV를 보는 것과 같은 일상적인 일에도 집중할 수 없었다.</label>
+              <select name="phq98" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>9. 차라리 죽는 것이 더 낫겠다고 생각했다 / 혹은 자해할 생각을 했다.</label>
+              <select name="phq99" required>
+                <option value="">선택하세요</option>
+                <option value="0">없음</option>
+                <option value="1">2~6일</option>
+                <option value="2">7~12일</option>
+                <option value="3">거의 매일</option>
               </select>
             </div>
           </div>

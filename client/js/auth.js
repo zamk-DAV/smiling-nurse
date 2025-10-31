@@ -150,6 +150,15 @@ if (document.getElementById('signup-form')) {
       occupation: document.getElementById('occupation').value,
       chronicDiseases: getSelectedDiseases() // 질병 선택기에서 데이터 가져오기
     };
+
+    // 간호사 정보 추가 (선택사항)
+    const yearsOfExperience = document.getElementById('years-of-experience')?.value;
+    const position = document.getElementById('position')?.value;
+    const department = document.getElementById('department')?.value;
+
+    if (yearsOfExperience) profile.yearsOfExperience = parseInt(yearsOfExperience);
+    if (position) profile.position = position;
+    if (department) profile.department = department;
     
     // 2단계 유효성 검사 (필수 필드)
     if (!profile.name || !profile.age || !profile.gender || !profile.height || !profile.weight || !profile.occupation) {
