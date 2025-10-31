@@ -304,6 +304,46 @@ function closeAIModal() {
   }
 }
 
+// 로딩 오버레이 표시
+function showLoadingOverlay(message = '처리 중...') {
+  const overlay = document.createElement('div');
+  overlay.id = 'voice-loading-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+  `;
+
+  overlay.innerHTML = `
+    <div style="text-align: center; color: white;">
+      <div style="font-size: 48px; margin-bottom: 20px; animation: spin 1s linear infinite;">⏳</div>
+      <div style="font-size: 24px; font-weight: 600; margin-bottom: 12px;">${message}</div>
+      <div style="font-size: 16px; color: rgba(255, 255, 255, 0.7);">잠시만 기다려주세요...</div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+// 로딩 오버레이 닫기
+function closeLoadingOverlay() {
+  const overlay = document.getElementById('voice-loading-overlay');
+  if (overlay) {
+    overlay.style.animation = 'fadeOut 0.3s ease-out';
+    setTimeout(() => overlay.remove(), 300);
+  }
+}
+
 // === 음성 대화 기능 ===
 
 // 음성 인식 및 합성 초기화
@@ -499,22 +539,27 @@ async function startConversationMode() {
     return;
   }
 
-  const form = document.getElementById('daily-check-form');
-  const formData = new FormData(form);
+  // 로딩 오버레이 표시
+  const loadingOverlay = showLoadingOverlay('🎤 AI와 대화를 시작하는 중...');
 
-  // 음성 인식 초기화
-  const recognitionInstance = initSpeechRecognition();
-  if (!recognitionInstance) {
-    return;
-  }
+  try {
+    const form = document.getElementById('daily-check-form');
+    const formData = new FormData(form);
 
-  // Web Audio API 초기화 (소음 제한용)
-  if (!audioContext) {
-    await initAudioContext();
-  }
+    // 음성 인식 초기화
+    const recognitionInstance = initSpeechRecognition();
+    if (!recognitionInstance) {
+      closeLoadingOverlay();
+      return;
+    }
 
-  // 대화 모드 활성화
-  conversationMode = true;
+    // Web Audio API 초기화 (소음 제한용)
+    if (!audioContext) {
+      await initAudioContext();
+    }
+
+    // 대화 모드 활성화
+    conversationMode = true;
 
   // 현재 작성 중인 폼 데이터 수집 (검증 없이)
   const meals = [];
@@ -584,6 +629,9 @@ async function startConversationMode() {
       window.chatSessionId = data.sessionId;
       window.chatMessageCount = 0;
 
+      // 로딩 오버레이 닫기
+      closeLoadingOverlay();
+
       // 첫 AI 메시지 표시 및 음성 출력
       addVoiceMessage('ai', data.message);
       await speak(data.message);
@@ -591,12 +639,14 @@ async function startConversationMode() {
       // 음성 인식 설정
       setupVoiceRecognition();
     } else {
+      closeLoadingOverlay();
       showAlert(`음성 대화 시작에 실패했습니다: ${data.message}`, 'error');
       closeVoiceUI();
       conversationMode = false;
     }
   } catch (error) {
     console.error('음성 대화 시작 오류 상세:', error);
+    closeLoadingOverlay();
     showAlert(`음성 대화 시작 중 오류가 발생했습니다: ${error.message}`, 'error');
     closeVoiceUI();
     conversationMode = false;
@@ -884,6 +934,9 @@ async function sendVoiceMessage(message) {
 
 // 음성 세션 종료
 async function endVoiceSession() {
+  // 로딩 오버레이 표시
+  const loadingOverlay = showLoadingOverlay('💬 대화를 마무리하는 중...');
+
   try {
     const response = await fetch(`${API_URL}/chat/end`, {
       method: 'POST',
@@ -895,6 +948,9 @@ async function endVoiceSession() {
     });
 
     const data = await response.json();
+
+    // 로딩 오버레이 닫기
+    closeLoadingOverlay();
 
     if (data.success) {
       // 대화 모드일 때는 간단한 종료 메시지만
@@ -926,6 +982,7 @@ async function endVoiceSession() {
     }
   } catch (error) {
     console.error('세션 종료 오류:', error);
+    closeLoadingOverlay();
     showAlert('세션 종료 중 오류가 발생했습니다.', 'error');
   }
 }
