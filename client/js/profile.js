@@ -30,6 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       height: parseFloat(formData.get('height')),
       weight: parseFloat(formData.get('weight')),
       occupation: formData.get('occupation'),
+      yearsOfExperience: formData.get('yearsOfExperience') ? parseInt(formData.get('yearsOfExperience')) : null,
+      position: formData.get('position') || null,
+      department: formData.get('department') || null,
       chronicDiseases: getSelectedDiseases() // 질병 선택기에서 데이터 가져오기
     };
     
@@ -82,6 +85,17 @@ async function loadProfile(userId) {
       document.getElementById('height').value = profile.height || '';
       document.getElementById('weight').value = profile.weight || '';
       document.getElementById('occupation').value = profile.occupation || '';
+
+      // 간호사 정보 채우기
+      if (profile.yearsOfExperience !== undefined && profile.yearsOfExperience !== null) {
+        document.getElementById('years-of-experience').value = profile.yearsOfExperience;
+      }
+      if (profile.position) {
+        document.getElementById('position').value = profile.position;
+      }
+      if (profile.department) {
+        document.getElementById('department').value = profile.department;
+      }
 
       // 만성질환 설정 (3번 요구사항)
       if (profile.chronicDiseases && profile.chronicDiseases.length > 0) {

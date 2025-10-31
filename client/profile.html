@@ -73,6 +73,50 @@
           </div>
         </div>
 
+        <div class="card" style="background: var(--accent-blue); margin-bottom: 28px; padding: 28px;">
+          <h2 style="color: var(--primary-green); margin-bottom: 20px;">👩‍⚕️ 간호사 정보 (선택사항)</h2>
+          <p style="color: var(--text-gray); font-size: 14px; margin-bottom: 20px;">간호사이신 경우 아래 정보를 입력해주세요. AI가 더 정확한 조언을 제공합니다.</p>
+
+          <div class="grid grid-3">
+            <div class="form-group">
+              <label for="years-of-experience">경력 (년차)</label>
+              <input type="number" id="years-of-experience" name="yearsOfExperience" placeholder="예: 5" min="0" max="50">
+            </div>
+
+            <div class="form-group">
+              <label for="position">직책</label>
+              <select id="position" name="position">
+                <option value="">선택하세요</option>
+                <option value="일반 간호사">일반 간호사</option>
+                <option value="주임 간호사">주임 간호사</option>
+                <option value="책임 간호사">책임 간호사</option>
+                <option value="수간호사">수간호사</option>
+                <option value="파트장">파트장</option>
+                <option value="간호부장">간호부장</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="department">진료과</label>
+              <select id="department" name="department">
+                <option value="">선택하세요</option>
+                <option value="내과">내과</option>
+                <option value="외과">외과</option>
+                <option value="응급실">응급실</option>
+                <option value="중환자실">중환자실</option>
+                <option value="소아과">소아과</option>
+                <option value="산부인과">산부인과</option>
+                <option value="정형외과">정형외과</option>
+                <option value="신경과">신경과</option>
+                <option value="정신건강의학과">정신건강의학과</option>
+                <option value="재활의학과">재활의학과</option>
+                <option value="수술실">수술실</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-bottom: 28px; padding: 28px;">
           <h2 style="color: var(--primary-green); margin-bottom: 20px;">🏥 만성질환 및 기저질환</h2>
           <div id="disease-selector-container"></div>
