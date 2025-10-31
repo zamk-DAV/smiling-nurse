@@ -498,21 +498,34 @@ async function viewRecordDetail(recordIndex) {
   // 기존 모달 닫기
   closeRecordsListModal();
 
+  // 이미 저장된 AI 분석이 있는지 확인
+  if (record.aiAnalysis) {
+    // 저장된 AI 분석 결과가 있으면 바로 표시
+    console.log('✅ 저장된 AI 분석 결과 사용');
+    showRecordDetailModal(record, record.aiAnalysis);
+    return;
+  }
+
+  // 저장된 AI 분석이 없으면 새로 생성
+  console.log('⚠️ 저장된 AI 분석 없음, 새로 생성 중...');
+
   // 로딩 모달 표시
   const loadingModal = showLoadingModal(`${new Date(record.date).toLocaleDateString()} 기록을 분석 중입니다.`);
-  
+
   try {
     // 프로필 데이터 가져오기
     const profileResponse = await fetch(`${API_URL}/user/profile/${userId}`);
     const profileData = await profileResponse.json();
 
-    // AI 분석 요청
+    // AI 분석 요청 (recordId 포함하여 저장하도록)
     const response = await fetch(`${API_URL}/ai/analyze-daily`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         recordData: record,
-        profileData: profileData.profile
+        profileData: profileData.profile,
+        userId: userId,
+        recordId: record._id // AI 분석 결과를 DB에 저장하기 위해 전달
       })
     });
 
@@ -523,6 +536,8 @@ async function viewRecordDetail(recordIndex) {
 
     // 상세 정보 모달 표시
     if (data.success) {
+      // AI 분석 성공 시 allRecords에도 반영 (다음에는 저장된 것 사용)
+      record.aiAnalysis = data.analysis;
       showRecordDetailModal(record, data.analysis);
     } else {
       showRecordDetailModal(record, 'AI 분석을 불러올 수 없었습니다.');

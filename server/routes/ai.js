@@ -15,7 +15,7 @@ const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 // 일일 기록 분석
 router.post('/analyze-daily', async (req, res) => {
   try {
-    const { recordData, profileData, userId } = req.body;
+    const { recordData, profileData, userId, recordId } = req.body;
 
     if (!recordData) {
       return res.status(400).json({ success: false, message: '기록 데이터가 필요합니다.' });
@@ -118,6 +118,20 @@ ${conversationContext ? '과거 상담 내용을 고려하여 일관되고 지�
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const analysis = response.text();
+
+    // recordId가 있으면 AI 분석 결과를 DB에 저장
+    if (recordId) {
+      try {
+        const Record = require('../models/Record');
+        await Record.findByIdAndUpdate(recordId, {
+          aiAnalysis: analysis
+        });
+        console.log('✅ AI 분석 결과가 Record에 저장됨:', recordId);
+      } catch (updateError) {
+        console.error('AI 분석 결과 저장 오류:', updateError);
+        // 저장 실패해도 분석 결과는 반환
+      }
+    }
 
     res.json({
       success: true,

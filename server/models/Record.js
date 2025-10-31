@@ -35,6 +35,13 @@ const RecordSchema = new mongoose.Schema({
     max: 24
   },
 
+  sleepMinutes: {
+    type: Number,
+    min: 0,
+    max: 59,
+    default: 0
+  },
+
   sleepQuality: {
     type: Number,
     min: 1,
@@ -61,7 +68,13 @@ const RecordSchema = new mongoose.Schema({
 
   phq9Total: Number, // PHQ-9 검사 총점 (0-27점)
 
-  notes: String // 메모
+  notes: String, // 메모
+
+  // AI 분석 결과 (한 번만 생성되고 저장됨)
+  aiAnalysis: {
+    type: String,
+    default: null
+  }
 
 }, {
   timestamps: true // createdAt과 updatedAt을 자동으로 관리

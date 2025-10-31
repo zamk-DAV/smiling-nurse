@@ -171,7 +171,8 @@ async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9L
       body: JSON.stringify({
         recordData: recordData,
         profileData: profileData.profile,
-        userId: userId
+        userId: userId,
+        recordId: recordId // AI 분석 결과를 DB에 저장하기 위해 전달
       })
     });
 
