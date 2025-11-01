@@ -223,6 +223,23 @@ body {
   background: #FAFFFE;
 }
 
+/* Select 요소 개선 - 스크롤 시 닫힘 방지 */
+.form-group select {
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238FD9A8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 48px;
+}
+
+.form-group select:focus {
+  position: relative;
+  z-index: 10;
+}
+
 .form-group textarea {
   resize: vertical;
   min-height: 120px;

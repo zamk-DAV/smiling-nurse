@@ -132,5 +132,46 @@
   <script src="js/disease-selector.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/profile.js"></script>
+
+  <!-- Select 드롭다운 개선 스크립트 -->
+  <script>
+    // 모든 select 요소에 대한 개선
+    document.addEventListener('DOMContentLoaded', () => {
+      const allSelects = document.querySelectorAll('select');
+
+      allSelects.forEach(select => {
+        // Select가 포커스될 때 화면 중앙으로 부드럽게 스크롤
+        select.addEventListener('focus', function() {
+          setTimeout(() => {
+            this.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'nearest'
+            });
+          }, 100);
+        });
+
+        // 모바일에서 select 열릴 때 더 나은 처리
+        select.addEventListener('mousedown', function(e) {
+          // Select의 현재 위치 저장
+          const rect = this.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+
+          // Select가 화면 하단에 너무 가까우면 위로 스크롤
+          if (rect.bottom > viewportHeight - 100) {
+            this.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }
+        });
+
+        // 선택 완료 시 포커스 해제 (키보드 숨김)
+        select.addEventListener('change', function() {
+          this.blur();
+        });
+      });
+    });
+  </script>
 </body>
 </html>

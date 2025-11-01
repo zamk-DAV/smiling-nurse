@@ -446,6 +446,11 @@ function checkAndStartRecognition() {
   }
 }
 
+// 모바일 환경 감지
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
 // 텍스트를 음성으로 변환 (TTS)
 function speak(text) {
   return new Promise((resolve) => {
@@ -455,23 +460,45 @@ function speak(text) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = 1.1; // 약간 빠르게
-    utterance.pitch = 1.1; // 약간 높게, 더 생동감
-    utterance.volume = 1.0;
+
+    // 모바일 환경에 따라 다른 설정 적용
+    const isMobile = isMobileDevice();
+    if (isMobile) {
+      // 모바일: 더 느리고 안정적인 설정
+      utterance.rate = 0.9; // 약간 느리게 (안정성 향상)
+      utterance.pitch = 1.0; // 기본 음높이
+      utterance.volume = 1.0;
+      console.log('모바일 음성 설정 적용');
+    } else {
+      // 데스크톱: 기존 설정
+      utterance.rate = 1.1; // 약간 빠르게
+      utterance.pitch = 1.1; // 약간 높게
+      utterance.volume = 1.0;
+      console.log('데스크톱 음성 설정 적용');
+    }
 
     // 한국어 음성 선택 (브라우저가 로드될 때까지 대기)
     const setVoiceAndSpeak = () => {
       const voices = synthesis.getVoices();
 
-      // 더 자연스러운 음성 우선 선택 (Google 한국어 음성 선호)
-      const koreanVoice =
-        voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('ko')) ||
-        voices.find(voice => voice.name.includes('Female') && voice.lang.startsWith('ko')) ||
-        voices.find(voice => voice.lang.startsWith('ko'));
+      // 더 자연스러운 음성 우선 선택
+      let koreanVoice;
+      if (isMobile) {
+        // 모바일: 기본 시스템 음성 우선 (더 안정적)
+        koreanVoice =
+          voices.find(voice => voice.lang.startsWith('ko') && voice.localService) ||
+          voices.find(voice => voice.lang.startsWith('ko'));
+      } else {
+        // 데스크톱: Google 음성 우선
+        koreanVoice =
+          voices.find(voice => voice.name.includes('Google') && voice.lang.startsWith('ko')) ||
+          voices.find(voice => voice.name.includes('Female') && voice.lang.startsWith('ko')) ||
+          voices.find(voice => voice.lang.startsWith('ko'));
+      }
 
       if (koreanVoice) {
         utterance.voice = koreanVoice;
-        console.log('선택된 음성:', koreanVoice.name);
+        console.log('선택된 음성:', koreanVoice.name, '/ 로컬:', koreanVoice.localService);
       }
 
       utterance.onstart = () => {
