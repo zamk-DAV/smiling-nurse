@@ -465,7 +465,7 @@ function speak(text) {
     const isMobile = isMobileDevice();
     if (isMobile) {
       // 모바일: 더 느리고 안정적인 설정
-      utterance.rate = 0.9; // 약간 느리게 (안정성 향상)
+      utterance.rate = 0.97; // 약간 느리게 (안정성 향상)
       utterance.pitch = 1.0; // 기본 음높이
       utterance.volume = 1.0;
       console.log('모바일 음성 설정 적용');
