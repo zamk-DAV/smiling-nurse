@@ -60,9 +60,9 @@
       </div>
 
       <div class="stat-card">
-        <div class="icon">🧠</div>
-        <div class="value" id="avg-pss">-</div>
-        <div class="label">평균 PSS-10 점수</div>
+        <div class="icon">📊</div>
+        <div class="value" id="avg-stress-total">-</div>
+        <div class="label">평균 스트레스 점수</div>
       </div>
     </div>
 
@@ -79,9 +79,22 @@
       </div>
     </div>
 
+    <!-- 간호사 스트레스 척도 차트 -->
     <div class="card" style="margin-bottom: 32px;">
-      <h2 style="color: var(--primary-green); margin-bottom: 20px;">🧠 PSS-10 점수 추이</h2>
-      <canvas id="pss-chart"></canvas>
+      <h2 style="color: var(--primary-green); margin-bottom: 20px;">📊 간호사 스트레스 총점 추이</h2>
+      <canvas id="stress-total-chart"></canvas>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom: 32px;">
+      <div class="card">
+        <h2 style="color: var(--primary-green); margin-bottom: 20px;">💼 업무과중 추이</h2>
+        <canvas id="work-overload-chart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2 style="color: var(--primary-green); margin-bottom: 20px;">😔 감정노동 추이</h2>
+        <canvas id="emotional-labor-chart"></canvas>
+      </div>
     </div>
 
     <div class="grid grid-2">

@@ -64,9 +64,15 @@ const RecordSchema = new mongoose.Schema({
 
   bloodPressureDiastolic: Number, // 이완기 혈압
 
-  pssTotal: Number, // PSS-10 검사 총점 (0-40점)
+  // 간호사 스트레스 측정도구 (19문항, 4점 척도)
+  stressScores: [Number], // 각 문항 점수 배열 (1-4점)
+  stressTotal: Number, // 총점 (19-76점)
 
-  phq9Total: Number, // PHQ-9 검사 총점 (0-27점)
+  // 요인별 점수
+  workOverloadScore: Number, // 업무과중 (1-9번, 9-36점)
+  emotionalLaborScore: Number, // 감정노동 (10-12번, 3-12점)
+  personalCharacteristicsScore: Number, // 개인적 특성 (13-15번, 3-12점)
+  organizationalCharacteristicsScore: Number, // 조직적 특성 (16-19번, 4-16점)
 
   notes: String, // 메모
 

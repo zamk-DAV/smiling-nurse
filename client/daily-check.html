@@ -246,234 +246,230 @@
           </div>
         </div>
 
+        <!-- 간호사 스트레스 측정도구 (19문항, 4점 척도) -->
         <div class="card" style="background: var(--accent-pink); margin-bottom: 24px; padding: 24px;">
-          <h2 style="color: var(--primary-green); margin-bottom: 12px;">🧠 지각된 스트레스 척도 (PSS-10)</h2>
-          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">최근 1개월 동안 당신이 느끼고 생각한 것에 대한 질문입니다. 각 문항의 내용을 얼마나 자주 느꼈는지 표시해주세요.</p>
+          <h2 style="color: var(--primary-green); margin-bottom: 12px;">🏥 간호사 스트레스 측정도구</h2>
+          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">최근 업무 중 다음 상황들에 대해 어떻게 느끼셨는지 표시해주세요.</p>
 
-          <div class="pss-questions">
+          <div class="stress-questions">
+            <!-- 요인 1: 업무과중 (1-9번) -->
+            <h3 style="color: var(--primary-green); margin: 20px 0 16px 0; font-size: 16px;">💼 업무과중</h3>
+
             <div class="form-group">
-              <label>1. 최근 1개월 동안, 예상치 못했던 일 때문에 당황했던 적이 얼마나 있었습니까?</label>
-              <select name="pss1" required>
+              <label>1. 정해진 시간 내에 해결해야 할 일이 많아 시간에 쫓겨 벅차다.</label>
+              <select name="stress1" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>2. 최근 1개월 동안, 인생에서 중요한 일들을 조절할 수 없다는 느낌을 경험하였습니까?</label>
-              <select name="pss2" required>
+              <label>2. 돌발적인 업무 발생에 대해 불안하다.</label>
+              <select name="stress2" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>3. 최근 1개월 동안, 신경이 예민해지고 스트레스를 받고 있다는 느낌을 얼마나 경험하였습니까?</label>
-              <select name="pss3" required>
+              <label>3. 동시에 많은 업무를 해결해야 해서 벅차다.</label>
+              <select name="stress3" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>4. 최근 1개월 동안, 당신의 개인적 문제들을 다루는데 있어서 얼마나 자주 자신감을 느끼셨습니까?</label>
-              <select name="pss4" required>
+              <label>4. 일이 너무 많아서 잘 해내지 못할 것 같아 걱정된다.</label>
+              <select name="stress4" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>5. 최근 1개월 동안, 일상의 일들이 당신의 생각대로 진행되고 있다는 느낌을 얼마나 경험하였습니까?</label>
-              <select name="pss5" required>
+              <label>5. 내가 확인하지 못한 사이 환자안전사고가 발생할까 불안하다.</label>
+              <select name="stress5" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>6. 최근 1개월 동안, 당신이 꼭 해야 하는 일을 처리할 수 없다고 생각한 적이 얼마나 있었습니까?</label>
-              <select name="pss6" required>
+              <label>6. 신속한 판단을 내려야 하는 상황에 처했을 때 마음이 조급해진다.</label>
+              <select name="stress6" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>7. 최근 1개월 동안, 일상생활의 짜증을 얼마나 자주 잘 다스릴 수 있었습니까?</label>
-              <select name="pss7" required>
+              <label>7. 밥을 먹거나 화장실 갈 시간이 부족하여 고달프다.</label>
+              <select name="stress7" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>8. 최근 1개월 동안, 최상의 컨디션이라고 얼마나 자주 느끼셨습니까?</label>
-              <select name="pss8" required>
+              <label>8. 환자/보호자의 간호 요구 (환자 상태 악화, 수술, 특수 처치 등)가 증가할 때 힘겹다.</label>
+              <select name="stress8" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>9. 최근 1개월 동안, 당신이 통제할 수 없는 일 때문에 화가 난 경험이 얼마나 있었습니까?</label>
-              <select name="pss9" required>
+              <label>9. 너무 바빠서 환자에게 충분히 간호할 시간이 없어 안타깝다.</label>
+              <select name="stress9" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
+              </select>
+            </div>
+
+            <!-- 요인 2: 감정노동 (10-12번) -->
+            <h3 style="color: var(--primary-green); margin: 32px 0 16px 0; font-size: 16px;">😔 감정노동</h3>
+
+            <div class="form-group">
+              <label>10. 환자/보호자에게 존중받지 못할 때 불쾌하다.</label>
+              <select name="stress10" required>
+                <option value="">선택하세요</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>10. 최근 1개월 동안, 어려운 일들이 너무 많이 쌓여서 극복하지 못할 것 같다고 느낀 적이 얼마나 있었습니까?</label>
-              <select name="pss10" required>
+              <label>11. 환자/보호자로부터 폭력 (폭언, 폭행, 불법 촬영/녹음 등)을 당하거나 목격할 때 회의감이 든다.</label>
+              <select name="stress11" required>
                 <option value="">선택하세요</option>
-                <option value="0">0 - 전혀 없었다</option>
-                <option value="1">1 - 거의 없었다</option>
-                <option value="2">2 - 때때로 있었다</option>
-                <option value="3">3 - 자주 있었다</option>
-                <option value="4">4 - 매우 자주 있었다</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="background: var(--accent-blue); margin-bottom: 24px; padding: 24px;">
-          <h2 style="color: var(--primary-green); margin-bottom: 12px;">💙 우울증 건강설문 (PHQ-9)</h2>
-          <p style="color: var(--text-gray); margin-bottom: 20px; font-size: 14px;">지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까? 해당하는 날을 헤아려서 표시해주세요.</p>
-
-          <div class="phq9-questions">
-            <div class="form-group">
-              <label>1. 기분이 가라앉거나, 우울하거나, 희망이 없다고 느꼈다.</label>
-              <select name="phq91" required>
-                <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>2. 평소 하던 일에 대한 흥미가 없어지거나 즐거움을 느끼지 못했다.</label>
-              <select name="phq92" required>
+              <label>12. 환자/보호자가 부당한 요구를 할 때 난처하다.</label>
+              <select name="stress12" required>
                 <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
+              </select>
+            </div>
+
+            <!-- 요인 3: 개인적 특성 (13-15번) -->
+            <h3 style="color: var(--primary-green); margin: 32px 0 16px 0; font-size: 16px;">👤 개인적 특성</h3>
+
+            <div class="form-group">
+              <label>13. 나의 간호실무 역량이 충분하지 않아 자괴감이 든다.</label>
+              <select name="stress13" required>
+                <option value="">선택하세요</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>3. 잠들기가 어렵거나 자주 깼다 / 혹은 너무 많이 잤다.</label>
-              <select name="phq93" required>
+              <label>14. 간호사로서 발전하지 못하는 내 모습에 좌절감을 느낀다.</label>
+              <select name="stress14" required>
                 <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>4. 평소보다 식욕이 줄었다 / 혹은 평소보다 많이 먹었다.</label>
-              <select name="phq94" required>
+              <label>15. 환자/보호자와 의사소통 하는 것이 두렵다.</label>
+              <select name="stress15" required>
                 <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
+              </select>
+            </div>
+
+            <!-- 요인 4: 조직적 특성 (16-19번) -->
+            <h3 style="color: var(--primary-green); margin: 32px 0 16px 0; font-size: 16px;">🏢 조직적 특성</h3>
+
+            <div class="form-group">
+              <label>16. 간호관리자가 나의 요구 사항 (듀티요청 등)을 존중하지 않아 속상하다.</label>
+              <select name="stress16" required>
+                <option value="">선택하세요</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>5. 다른 사람들이 눈치챌 정도로 평소보다 말과 행동이 느려졌다 / 혹은 너무 안절부절 못해서 가만히 앉아 있을 수 없었다.</label>
-              <select name="phq95" required>
+              <label>17. 직장의 분위기가 위계적이어서 갑갑하다.</label>
+              <select name="stress17" required>
                 <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>6. 피곤하고 기운이 없었다.</label>
-              <select name="phq96" required>
+              <label>18. 체계적이고 충분한 직무교육을 제공받지 못해 불만족스럽다.</label>
+              <select name="stress18" required>
                 <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>7. 내가 잘못 했거나, 실패했다는 생각이 들었다 / 혹은 자신과 가족을 실망시켰다고 생각했다.</label>
-              <select name="phq97" required>
+              <label>19. 간호관리자로부터 부적절한 업무지시를 받을 때 화가 난다.</label>
+              <select name="stress19" required>
                 <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>8. 신문을 보거나 TV를 보는 것과 같은 일상적인 일에도 집중할 수 없었다.</label>
-              <select name="phq98" required>
-                <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>9. 차라리 죽는 것이 더 낫겠다고 생각했다 / 혹은 자해할 생각을 했다.</label>
-              <select name="phq99" required>
-                <option value="">선택하세요</option>
-                <option value="0">없음</option>
-                <option value="1">2~6일</option>
-                <option value="2">7~12일</option>
-                <option value="3">거의 매일</option>
+                <option value="1">전혀 그렇지 않다</option>
+                <option value="2">그렇지 않다</option>
+                <option value="3">그렇다</option>
+                <option value="4">매우 그렇다</option>
               </select>
             </div>
           </div>

@@ -57,13 +57,13 @@ function updateSummaryStats() {
     document.getElementById('avg-stress-all').textContent = '-';
   }
 
-  // 평균 PSS-10 점수
-  const pssScores = allRecords.filter(r => r.pssTotal).map(r => r.pssTotal);
-  if (pssScores.length > 0) {
-    const avgPss = (pssScores.reduce((a, b) => a + b, 0) / pssScores.length).toFixed(1);
-    document.getElementById('avg-pss').textContent = avgPss;
+  // 평균 스트레스 총점
+  const stressTotalScores = allRecords.filter(r => r.stressTotal).map(r => r.stressTotal);
+  if (stressTotalScores.length > 0) {
+    const avgStressTotal = (stressTotalScores.reduce((a, b) => a + b, 0) / stressTotalScores.length).toFixed(1);
+    document.getElementById('avg-stress-total').textContent = avgStressTotal + '점';
   } else {
-    document.getElementById('avg-pss').textContent = '-';
+    document.getElementById('avg-stress-total').textContent = '-';
   }
 }
 
@@ -72,12 +72,14 @@ function createCharts() {
   // 모든 차트 인스턴스 파괴 후 재생성 (자잘한 오류 수정: 차트 중복 생성 방지)
   if (window.stressChart) window.stressChart.destroy();
   if (window.sleepChart) window.sleepChart.destroy();
-  if (window.pssChart) window.pssChart.destroy();
+  if (window.stressTotalChart) window.stressTotalChart.destroy();
+  if (window.workOverloadChart) window.workOverloadChart.destroy();
+  if (window.emotionalLaborChart) window.emotionalLaborChart.destroy();
   if (window.workChart) window.workChart.destroy();
   if (window.mealsChart) window.mealsChart.destroy();
 
   // 날짜 레이블 생성 (최근 30일치만 표시하여 가독성 확보)
-  const recentRecords = allRecords.slice(-30); 
+  const recentRecords = allRecords.slice(-30);
   const labels = recentRecords.map(r => {
     return new Date(r.date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
   });
@@ -90,9 +92,17 @@ function createCharts() {
   const sleepData = recentRecords.map(r => r.sleepHours || null);
   window.sleepChart = createLineChart('sleep-chart', labels, sleepData, '수면 시간 (시간)', '#4ECDC4', { beginAtZero: true });
 
-  // PSS-10 차트
-  const pssData = recentRecords.map(r => r.pssTotal || null);
-  window.pssChart = createLineChart('pss-chart', labels, pssData, 'PSS-10 점수', '#95E1D3', { beginAtZero: true, max: 40, stepSize: 5 });
+  // 스트레스 총점 차트
+  const stressTotalData = recentRecords.map(r => r.stressTotal || null);
+  window.stressTotalChart = createLineChart('stress-total-chart', labels, stressTotalData, '스트레스 총점', '#95E1D3', { beginAtZero: true, max: 76, stepSize: 10 });
+
+  // 업무과중 차트
+  const workOverloadData = recentRecords.map(r => r.workOverloadScore || null);
+  window.workOverloadChart = createLineChart('work-overload-chart', labels, workOverloadData, '업무과중 점수', '#FFB6C1', { beginAtZero: true, max: 36, stepSize: 6 });
+
+  // 감정노동 차트
+  const emotionalLaborData = recentRecords.map(r => r.emotionalLaborScore || null);
+  window.emotionalLaborChart = createLineChart('emotional-labor-chart', labels, emotionalLaborData, '감정노동 점수', '#FF9999', { beginAtZero: true, max: 12, stepSize: 2 });
 
   // 업무 강도 차트
   const workData = recentRecords.map(r => r.workIntensity || null);
@@ -444,14 +454,15 @@ function viewAllRecords() {
       <div style="margin-top: 24px;">
         ${sortedRecords.map((record, index) => {
           const date = new Date(record.date);
-          const dateStr = date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+          const dateStr = date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
 
+          // 스트레스 레벨 계산
           let stressLevel = '보통';
           let stressColor = '#FFF9C4';
-          if (record.pssTotal <= 13) {
+          if (record.stressTotal <= 38) {
             stressLevel = '낮음';
             stressColor = '#C8E6C9';
-          } else if (record.pssTotal >= 27) {
+          } else if (record.stressTotal >= 58) {
             stressLevel = '높음';
             stressColor = '#FFCDD2';
           }
@@ -465,10 +476,10 @@ function viewAllRecords() {
                  onmouseover="this.style.borderColor='var(--primary-green)'; this.style.transform='translateY(-4px)'"
                  onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'"
                  onclick="viewRecordDetail(${originalIndex})">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <h3 style="color: var(--primary-green); margin: 0;">${dateStr}</h3>
                 <div style="padding: 6px 16px; background: ${stressColor}; border-radius: 20px; font-weight: 600;">
-                  PSS-10: ${record.pssTotal}점 (${stressLevel})
+                  스트레스: ${record.stressTotal || '-'}점/76점
                 </div>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; color: var(--text-gray);">
@@ -589,18 +600,29 @@ async function viewRecordDetail(recordIndex) {
 // 기록 상세 정보 모달 표시
 function showRecordDetailModal(record, aiAnalysis) {
   const date = new Date(record.date);
-  const dateStr = date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  const dateStr = date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
   const sleepDisplay = formatSleepTime(record.sleepHours);
 
-  let stressLevel = '보통';
-  let stressColor = '#FFF9C4';
-  if (record.pssTotal <= 13) {
-    stressLevel = '낮음';
-    stressColor = '#C8E6C9';
-  } else if (record.pssTotal >= 27) {
-    stressLevel = '높음';
-    stressColor = '#FFCDD2';
-  }
+  // 스트레스 척도 레벨 계산
+  let stressLevel = '보통', stressColor = '#FFF9C4';
+  if (record.stressTotal <= 38) { stressLevel = '낮음'; stressColor = '#C8E6C9'; }
+  else if (record.stressTotal >= 58) { stressLevel = '높음'; stressColor = '#FFCDD2'; }
+
+  let workOverloadLevel = '보통', workOverloadColor = '#FFF9C4';
+  if (record.workOverloadScore <= 18) { workOverloadLevel = '낮음'; workOverloadColor = '#C8E6C9'; }
+  else if (record.workOverloadScore >= 28) { workOverloadLevel = '높음'; workOverloadColor = '#FFCDD2'; }
+
+  let emotionalLaborLevel = '보통', emotionalLaborColor = '#FFF9C4';
+  if (record.emotionalLaborScore <= 6) { emotionalLaborLevel = '낮음'; emotionalLaborColor = '#C8E6C9'; }
+  else if (record.emotionalLaborScore >= 10) { emotionalLaborLevel = '높음'; emotionalLaborColor = '#FFCDD2'; }
+
+  let personalLevel = '보통', personalColor = '#FFF9C4';
+  if (record.personalCharacteristicsScore <= 6) { personalLevel = '낮음'; personalColor = '#C8E6C9'; }
+  else if (record.personalCharacteristicsScore >= 10) { personalLevel = '높음'; personalColor = '#FFCDD2'; }
+
+  let organizationalLevel = '보통', organizationalColor = '#FFF9C4';
+  if (record.organizationalCharacteristicsScore <= 8) { organizationalLevel = '낮음'; organizationalColor = '#C8E6C9'; }
+  else if (record.organizationalCharacteristicsScore >= 13) { organizationalLevel = '높음'; organizationalColor = '#FFCDD2'; }
 
   const modal = document.createElement('div');
   modal.id = 'record-detail-modal';
@@ -631,12 +653,39 @@ function showRecordDetailModal(record, aiAnalysis) {
       </div>
 
       <div class="card" style="background: linear-gradient(135deg, var(--light-green), rgba(255, 255, 255, 0.8)); margin-bottom: 20px; padding: 20px;">
-        <h3 style="color: var(--primary-green); margin-bottom: 12px;">📊 스트레스 수준</h3>
-        <div style="font-size: 32px; font-weight: 700; color: var(--primary-green); text-align: center; margin: 16px 0;">
-          PSS-10: ${record.pssTotal}점 / 40점
+        <h3 style="color: var(--primary-green); margin-bottom: 16px;">🏥 간호사 스트레스 측정 결과</h3>
+
+        <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 2px solid var(--primary-green);">
+          <div style="text-align: center; margin-bottom: 8px;">
+            <span style="font-size: 16px; font-weight: 600; color: var(--text-gray);">총 스트레스 점수</span>
+          </div>
+          <div style="text-align: center;">
+            <span style="font-size: 28px; font-weight: 700; color: var(--primary-green);">${record.stressTotal || '-'}점</span>
+            <span style="font-size: 18px; color: var(--text-gray);">/76점</span>
+          </div>
+          <div style="text-align: center; padding: 8px 16px; background: ${stressColor}; border-radius: 20px; margin-top: 8px;">
+            <strong>${stressLevel}</strong>
+          </div>
         </div>
-        <div style="text-align: center; padding: 10px 20px; background: ${stressColor}; border-radius: 20px; display: inline-block; margin: 0 auto; width: 100%;">
-          <strong>스트레스 수준: ${stressLevel}</strong>
+
+        <h4 style="color: var(--primary-green); font-size: 14px; margin-bottom: 12px;">요인별 점수</h4>
+        <div style="display: grid; gap: 8px;">
+          <div style="background: white; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600;">💼 업무과중</span>
+            <span style="font-size: 15px; font-weight: 700; color: var(--primary-green);">${record.workOverloadScore || '-'}/36점</span>
+          </div>
+          <div style="background: white; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600;">😔 감정노동</span>
+            <span style="font-size: 15px; font-weight: 700; color: var(--primary-green);">${record.emotionalLaborScore || '-'}/12점</span>
+          </div>
+          <div style="background: white; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600;">👤 개인적 특성</span>
+            <span style="font-size: 15px; font-weight: 700; color: var(--primary-green);">${record.personalCharacteristicsScore || '-'}/12점</span>
+          </div>
+          <div style="background: white; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600;">🏢 조직적 특성</span>
+            <span style="font-size: 15px; font-weight: 700; color: var(--primary-green);">${record.organizationalCharacteristicsScore || '-'}/16점</span>
+          </div>
         </div>
       </div>
 
@@ -645,7 +694,7 @@ function showRecordDetailModal(record, aiAnalysis) {
         <div style="display: grid; gap: 12px;">
           <div><strong>😰 스트레스 수준:</strong> ${record.stressLevel}/10</div>
           <div><strong>😴 수면 시간:</strong> ${sleepDisplay}</div>
-          <div><strong>😴 수면의 질:</strong> ${record.sleepQuality ? record.sleepQuality + '/5' : '기록 없음'}</div>
+          <div><strong>😴 수면의 질:</strong> ${record.sleepQuality ? record.sleepQuality + '/10' : '기록 없음'}</div>
           <div><strong>💪 업무 강도:</strong> ${record.workIntensity}/10</div>
           <div><strong>🍽️ 식사:</strong> ${record.meals && record.meals.length > 0 ? record.meals.map(m => m === 'breakfast' ? '아침' : m === 'lunch' ? '점심' : '저녁').join(', ') : '기록 없음'}</div>
           ${record.bloodSugar ? `<div><strong>🍬 혈당:</strong> ${record.bloodSugar} mg/dL</div>` : ''}

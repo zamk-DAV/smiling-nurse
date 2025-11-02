@@ -35,20 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formData = new FormData(e.target);
 
-    // PSS-10 항목 선택 여부 검증 (자잘한 오류 수정)
-    for (let i = 1; i <= 10; i++) {
-        if (!formData.get(`pss${i}`)) {
-            showAlert(`PSS-10의 ${i}번 질문에 답해주세요.`, 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-            return;
-        }
-    }
-
-    // PHQ-9 항목 선택 여부 검증
-    for (let i = 1; i <= 9; i++) {
-        if (!formData.get(`phq9${i}`)) {
-            showAlert(`PHQ-9의 ${i}번 질문에 답해주세요.`, 'error');
+    // 간호사 스트레스 측정도구 (19문항) 항목 선택 여부 검증
+    for (let i = 1; i <= 19; i++) {
+        if (!formData.get(`stress${i}`)) {
+            showAlert(`간호사 스트레스 측정도구 ${i}번 질문에 답해주세요.`, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
             return;
@@ -61,26 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
         meals.push(input.value);
     });
 
-    // PSS-10 점수 계산 (역채점 문항: 4, 5, 7, 8)
-    const pssScores = [];
-    for (let i = 1; i <= 10; i++) {
-      const value = parseInt(formData.get(`pss${i}`));
-      // 4, 5, 7, 8번 문항은 역채점 (4 - 값)
-      if ([4, 5, 7, 8].includes(i)) {
-        pssScores.push(4 - value);
-      } else {
-        pssScores.push(value);
-      }
+    // 간호사 스트레스 측정도구 점수 계산 (19문항, 4점 척도: 19-76점)
+    const stressScores = [];
+    for (let i = 1; i <= 19; i++) {
+      const value = parseInt(formData.get(`stress${i}`));
+      stressScores.push(value);
     }
-    const pssTotal = pssScores.reduce((a, b) => a + b, 0);
+    const stressTotal = stressScores.reduce((a, b) => a + b, 0);
 
-    // PHQ-9 점수 계산 (0-27점)
-    const phq9Scores = [];
-    for (let i = 1; i <= 9; i++) {
-      const value = parseInt(formData.get(`phq9${i}`));
-      phq9Scores.push(value);
-    }
-    const phq9Total = phq9Scores.reduce((a, b) => a + b, 0);
+    // 요인별 점수 계산
+    const workOverloadScore = stressScores.slice(0, 9).reduce((a, b) => a + b, 0); // 1-9번 (업무과중)
+    const emotionalLaborScore = stressScores.slice(9, 12).reduce((a, b) => a + b, 0); // 10-12번 (감정노동)
+    const personalCharacteristicsScore = stressScores.slice(12, 15).reduce((a, b) => a + b, 0); // 13-15번 (개인적 특성)
+    const organizationalCharacteristicsScore = stressScores.slice(15, 19).reduce((a, b) => a + b, 0); // 16-19번 (조직적 특성)
 
     // 수면 시간 계산 (시간 + 분/60) (6번 요구사항)
     const sleepHoursInput = parseInt(formData.get('sleepHours')) || 0;
@@ -100,9 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
       steps: parseInt(formData.get('steps')) || null,
       bloodPressureSystolic: parseInt(formData.get('bloodPressureSystolic')) || null,
       bloodPressureDiastolic: parseInt(formData.get('bloodPressureDiastolic')) || null,
-      pssScores: pssScores,
-      pssTotal: pssTotal,
-      phq9Total: phq9Total,
+      stressScores: stressScores,
+      stressTotal: stressTotal,
+      workOverloadScore: workOverloadScore,
+      emotionalLaborScore: emotionalLaborScore,
+      personalCharacteristicsScore: personalCharacteristicsScore,
+      organizationalCharacteristicsScore: organizationalCharacteristicsScore,
       notes: formData.get('notes') || '',
       date: new Date().toISOString() // 기록 날짜 추가
     };
@@ -124,21 +110,35 @@ document.addEventListener('DOMContentLoaded', () => {
         showAlert('✅ 기록이 성공적으로 저장되었습니다. AI 분석을 시작합니다.', 'success');
         submitBtn.innerHTML = '🤖 AI 분석 중... <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span>';
 
-        // PSS-10 결과 표시
-        let stressLevel = '보통';
-        if (pssTotal <= 13) stressLevel = '낮음';
-        else if (pssTotal >= 27) stressLevel = '높음';
+        // 스트레스 총점 결과 해석 (19-76점)
+        let stressLevelText = '';
+        if (stressTotal <= 38) stressLevelText = '낮은 스트레스';
+        else if (stressTotal <= 57) stressLevelText = '보통 스트레스';
+        else stressLevelText = '높은 스트레스';
 
-        // PHQ-9 결과 해석
-        let phq9Level = '';
-        if (phq9Total <= 4) phq9Level = '우울증상 최소화';
-        else if (phq9Total <= 9) phq9Level = '가벼운 우울증상';
-        else if (phq9Total <= 14) phq9Level = '중간정도 우울증상';
-        else if (phq9Total <= 19) phq9Level = '중간정도-심한 우울증상';
-        else phq9Level = '심한 우울증상';
+        // 요인별 해석
+        let workOverloadLevel = '';
+        if (workOverloadScore <= 18) workOverloadLevel = '낮음';
+        else if (workOverloadScore <= 27) workOverloadLevel = '보통';
+        else workOverloadLevel = '높음';
 
-        // AI 분석 요청 (9번 요구사항)
-        getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9Level, recordId, submitBtn, originalText);
+        let emotionalLaborLevel = '';
+        if (emotionalLaborScore <= 6) emotionalLaborLevel = '낮음';
+        else if (emotionalLaborScore <= 9) emotionalLaborLevel = '보통';
+        else emotionalLaborLevel = '높음';
+
+        let personalLevel = '';
+        if (personalCharacteristicsScore <= 6) personalLevel = '낮음';
+        else if (personalCharacteristicsScore <= 9) personalLevel = '보통';
+        else personalLevel = '높음';
+
+        let organizationalLevel = '';
+        if (organizationalCharacteristicsScore <= 8) organizationalLevel = '낮음';
+        else if (organizationalCharacteristicsScore <= 12) organizationalLevel = '보통';
+        else organizationalLevel = '높음';
+
+        // AI 분석 요청
+        getAIAnalysis(recordData, stressTotal, stressLevelText, workOverloadScore, emotionalLaborScore, personalCharacteristicsScore, organizationalCharacteristicsScore, recordId, submitBtn, originalText);
       } else {
         // 오류 시 버튼 복원
         submitBtn.disabled = false;
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // AI 분석 요청 함수
-async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9Level, recordId, submitBtn, originalText) {
+async function getAIAnalysis(recordData, stressTotal, stressLevelText, workOverloadScore, emotionalLaborScore, personalCharacteristicsScore, organizationalCharacteristicsScore, recordId, submitBtn, originalText) {
   try {
     const userId = localStorage.getItem('userId');
 
@@ -183,10 +183,10 @@ async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9L
 
     if (data.success) {
       // AI 분석 결과 모달 표시
-      showAIAnalysisModal(data.analysis, pssTotal, stressLevel, phq9Total, phq9Level, recordData, profileData.profile, recordId);
+      showAIAnalysisModal(data.analysis, stressTotal, stressLevelText, workOverloadScore, emotionalLaborScore, personalCharacteristicsScore, organizationalCharacteristicsScore, recordData, profileData.profile, recordId);
     } else {
       // AI 분석 실패 시에도 기본 결과 표시
-      showAlert(`✨ AI 분석에 실패했습니다. PSS-10: ${pssTotal}점, PHQ-9: ${phq9Total}점`, 'warning');
+      showAlert(`✨ AI 분석에 실패했습니다. 총 스트레스 점수: ${stressTotal}점 (${stressLevelText})`, 'warning');
       setTimeout(() => {
         window.location.href = 'dashboard.html';
       }, 1000);
@@ -196,15 +196,15 @@ async function getAIAnalysis(recordData, pssTotal, stressLevel, phq9Total, phq9L
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
     // 오류 시에도 기본 결과 표시
-    showAlert(`✨ AI 분석 중 오류가 발생했습니다. PSS-10 점수: ${pssTotal}점 (수준: ${stressLevel})`, 'error');
+    showAlert(`✨ AI 분석 중 오류가 발생했습니다. 스트레스 점수: ${stressTotal}점 (${stressLevelText})`, 'error');
     setTimeout(() => {
       window.location.href = 'dashboard.html';
     }, 1000);
   }
 }
 
-// AI 분석 결과 모달 표시 (9번 요구사항)
-function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Level, recordData, profileData, recordId) {
+// AI 분석 결과 모달 표시
+function showAIAnalysisModal(analysis, stressTotal, stressLevelText, workOverloadScore, emotionalLaborScore, personalCharacteristicsScore, organizationalCharacteristicsScore, recordData, profileData, recordId) {
   // 모달 HTML 생성
   const modal = document.createElement('div');
   modal.id = 'ai-modal';
@@ -222,42 +222,65 @@ function showAIAnalysisModal(analysis, pssTotal, stressLevel, phq9Total, phq9Lev
     animation: fadeIn 0.3s ease-out;
   `;
 
-  // PHQ-9 색상 결정
-  let phq9Color = '#C8E6C9'; // 최소화 (초록)
-  if (phq9Total > 14) phq9Color = '#FFCDD2'; // 중간-심함 (빨강)
-  else if (phq9Total > 9) phq9Color = '#FFE0B2'; // 중간 (주황)
-  else if (phq9Total > 4) phq9Color = '#FFF9C4'; // 가벼움 (노랑)
+  // 색상 결정
+  let totalStressColor = stressTotal <= 38 ? '#C8E6C9' : stressTotal <= 57 ? '#FFF9C4' : '#FFCDD2';
+  let workOverloadColor = workOverloadScore <= 18 ? '#C8E6C9' : workOverloadScore <= 27 ? '#FFF9C4' : '#FFCDD2';
+  let emotionalLaborColor = emotionalLaborScore <= 6 ? '#C8E6C9' : emotionalLaborScore <= 9 ? '#FFF9C4' : '#FFCDD2';
+  let personalColor = personalCharacteristicsScore <= 6 ? '#C8E6C9' : personalCharacteristicsScore <= 9 ? '#FFF9C4' : '#FFCDD2';
+  let organizationalColor = organizationalCharacteristicsScore <= 8 ? '#C8E6C9' : organizationalCharacteristicsScore <= 12 ? '#FFF9C4' : '#FFCDD2';
 
   modal.innerHTML = `
     <div class="card" style="max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative;">
       <button onclick="closeAIModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text-gray); transition: var(--transition);">×</button>
 
       <div class="header">
-        <div class="logo">🤖</div>
-        <h1>AI 건강 분석 결과</h1>
-        <p>오늘의 기록을 기반으로 한 맞춤형 조언</p>
+        <div class="logo">🩺</div>
+        <h1>간호사 건강 AI 분석</h1>
+        <p>간호사 스트레스 측정도구 기반 맞춤형 조언</p>
       </div>
 
       <div class="card" style="background: linear-gradient(135deg, var(--light-green), rgba(255, 255, 255, 0.8)); margin-bottom: 20px; padding: 20px;">
-        <h3 style="color: var(--primary-green); margin-bottom: 12px;">📊 오늘의 정신건강 수준</h3>
+        <h3 style="color: var(--primary-green); margin-bottom: 16px;">🏥 간호사 스트레스 지표</h3>
 
-        <div style="margin-bottom: 20px;">
-          <div style="font-size: 18px; font-weight: 600; color: var(--text-gray); margin-bottom: 8px;">스트레스 척도 (PSS-10)</div>
-          <div style="font-size: 28px; font-weight: 700; color: var(--primary-green); text-align: center; margin: 12px 0;">
-            ${pssTotal}점 / 40점
+        <div style="margin-bottom: 20px; border-bottom: 2px solid var(--primary-green); padding-bottom: 16px;">
+          <div style="font-size: 16px; font-weight: 600; color: var(--text-gray); margin-bottom: 8px;">📊 총 스트레스 점수</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--primary-green); text-align: center; margin: 8px 0;">
+            ${stressTotal}점 / 76점
           </div>
-          <div style="text-align: center; padding: 8px 16px; background: ${stressLevel === '낮음' ? '#C8E6C9' : stressLevel === '높음' ? '#FFCDD2' : '#FFF9C4'}; border-radius: 20px; display: inline-block; margin: 0 auto; width: 100%;">
-            <strong>${stressLevel}</strong>
+          <div style="text-align: center; padding: 8px 16px; background: ${totalStressColor}; border-radius: 20px; display: inline-block; margin: 0 auto; width: 100%;">
+            <strong>${stressLevelText}</strong>
           </div>
         </div>
 
-        <div>
-          <div style="font-size: 18px; font-weight: 600; color: var(--text-gray); margin-bottom: 8px;">우울증 척도 (PHQ-9)</div>
-          <div style="font-size: 28px; font-weight: 700; color: var(--primary-green); text-align: center; margin: 12px 0;">
-            ${phq9Total}점 / 27점
+        <h4 style="color: var(--primary-green); font-size: 14px; margin-bottom: 12px;">요인별 점수</h4>
+
+        <div style="display: grid; gap: 12px;">
+          <div style="background: white; padding: 10px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 13px; font-weight: 600;">💼 업무과중</span>
+              <span style="font-size: 16px; font-weight: 700; color: var(--primary-green);">${workOverloadScore}/36점</span>
+            </div>
           </div>
-          <div style="text-align: center; padding: 8px 16px; background: ${phq9Color}; border-radius: 20px; display: inline-block; margin: 0 auto; width: 100%;">
-            <strong>${phq9Level}</strong>
+
+          <div style="background: white; padding: 10px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 13px; font-weight: 600;">😔 감정노동</span>
+              <span style="font-size: 16px; font-weight: 700; color: var(--primary-green);">${emotionalLaborScore}/12점</span>
+            </div>
+          </div>
+
+          <div style="background: white; padding: 10px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 13px; font-weight: 600;">👤 개인적 특성</span>
+              <span style="font-size: 16px; font-weight: 700; color: var(--primary-green);">${personalCharacteristicsScore}/12점</span>
+            </div>
+          </div>
+
+          <div style="background: white; padding: 10px; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 13px; font-weight: 600;">🏢 조직적 특성</span>
+              <span style="font-size: 16px; font-weight: 700; color: var(--primary-green);">${organizationalCharacteristicsScore}/16점</span>
+            </div>
           </div>
         </div>
       </div>
@@ -831,14 +854,30 @@ function showVoiceUI() {
       </div>
 
       <div style="padding: 20px; border-top: 2px solid var(--light-green); background: white;">
-        <div id="voice-status" style="text-align: center; margin-bottom: 16px; font-size: 16px; font-weight: 500; color: var(--text-gray);">
-          💬 마이크 버튼을 눌러 말씀해주세요
+        <div id="voice-status" style="text-align: center; margin-bottom: 12px; font-size: 16px; font-weight: 500; color: var(--text-gray);">
+          💬 말하거나 입력해주세요
         </div>
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <button id="mic-button" onclick="startListening()" class="btn btn-primary" style="flex: 1; padding: 16px; font-size: 18px;">
-            🎤 말하기
+
+        <!-- 텍스트 입력 영역 -->
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input
+            type="text"
+            id="text-input"
+            placeholder="텍스트로 입력하기..."
+            style="flex: 1; padding: 12px; border: 2px solid var(--secondary-green); border-radius: 8px; font-size: 16px;"
+            onkeypress="if(event.key === 'Enter') sendTextMessage();"
+          />
+          <button onclick="sendTextMessage()" class="btn btn-primary" style="padding: 12px 20px; white-space: nowrap;">
+            ✉️ 전송
           </button>
-          <button onclick="endVoiceSession()" class="btn btn-secondary" style="padding: 16px 24px; white-space: nowrap;">
+        </div>
+
+        <!-- 음성 입력 버튼 -->
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button id="mic-button" onclick="startListening()" class="btn btn-secondary" style="flex: 1; padding: 14px; font-size: 16px;">
+            🎤 음성으로 말하기
+          </button>
+          <button onclick="endVoiceSession()" class="btn btn-secondary" style="padding: 14px 20px; white-space: nowrap;">
             💾 종료
           </button>
         </div>
@@ -955,6 +994,73 @@ function startListening() {
       isListening = false;
       updateSpeakingStatus(false);
     }
+  }
+}
+
+// 텍스트 메시지 전송
+async function sendTextMessage() {
+  const textInput = document.getElementById('text-input');
+  const message = textInput.value.trim();
+
+  if (!message) {
+    showAlert('메시지를 입력해주세요.', 'warning');
+    return;
+  }
+
+  // 입력 필드 초기화
+  textInput.value = '';
+
+  // 사용자 메시지 표시
+  addVoiceMessage('user', message);
+
+  try {
+    // AI 응답 대기 중 상태로 변경
+    isProcessing = true;
+    updateSpeakingStatus(false);
+
+    const response = await fetch(`${API_URL}/chat/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: window.chatSessionId,
+        message
+      })
+    });
+
+    const data = await response.json();
+
+    // AI 응답 받음 - 처리 중 상태 해제
+    isProcessing = false;
+    updateSpeakingStatus(false);
+
+    if (data.success) {
+      // AI 응답 표시 (음성 출력은 선택적)
+      addVoiceMessage('ai', data.message);
+
+      // 음성 출력 여부를 사용자가 선택할 수 있도록 (기본은 출력하지 않음)
+      // await speak(data.message);
+
+      window.chatMessageCount = data.messageCount || 0;
+
+      // 종료 질문인 경우
+      if (data.isClosingQuestion) {
+        console.log('종료 질문 모드 활성화');
+      }
+
+      // 사용자가 종료를 원하는 경우
+      if (data.shouldEnd) {
+        setTimeout(() => {
+          endVoiceSession();
+        }, 2000);
+      }
+    } else {
+      showAlert('메시지 전송에 실패했습니다.', 'error');
+    }
+  } catch (error) {
+    console.error('메시지 전송 오류:', error);
+    isProcessing = false;
+    updateSpeakingStatus(false);
+    showAlert('메시지 전송 중 오류가 발생했습니다.', 'error');
   }
 }
 
