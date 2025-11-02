@@ -25,13 +25,28 @@ function showAlert(message, type = 'success') {
 
 // 로그인 처리
 if (document.getElementById('login-form')) {
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
+  const loginForm = document.getElementById('login-form');
+  let isLoginSubmitting = false; // 중복 제출 방지 플래그
+
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // 이미 제출 중이면 무시
+    if (isLoginSubmitting) {
+      return;
+    }
 
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
 
     try {
+      // 제출 중 상태로 변경
+      isLoginSubmitting = true;
+      submitButton.disabled = true;
+      submitButton.textContent = '로그인 중...';
+
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -49,10 +64,18 @@ if (document.getElementById('login-form')) {
         }, 1000);
       } else {
         showAlert(data.message, 'error');
+        // 실패 시 버튼 복원
+        isLoginSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
       }
     } catch (error) {
       console.error('로그인 오류:', error);
       showAlert('서버와의 연결에 실패했습니다.', 'error');
+      // 오류 시 버튼 복원
+      isLoginSubmitting = false;
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
     }
   });
 }
@@ -92,7 +115,14 @@ if (document.getElementById('signup-form')) {
   }
 
   // 다음 단계
+  let isNextButtonProcessing = false; // 중복 클릭 방지 플래그
+
   document.getElementById('next-btn')?.addEventListener('click', () => {
+    // 이미 처리 중이면 무시
+    if (isNextButtonProcessing) {
+      return;
+    }
+
     // 1단계 유효성 검사
     const username = document.getElementById('signup-username').value;
     const password = document.getElementById('signup-password').value;
@@ -113,6 +143,14 @@ if (document.getElementById('signup-form')) {
       return;
     }
 
+    // 처리 중 상태로 변경
+    isNextButtonProcessing = true;
+    const nextButton = document.getElementById('next-btn');
+    const originalButtonText = nextButton.textContent;
+    nextButton.disabled = true;
+    nextButton.textContent = '처리 중...';
+
+    // 단계 이동
     currentStep++;
     updateSteps();
 
@@ -123,7 +161,16 @@ if (document.getElementById('signup-form')) {
         if (selectorContainer && !selectorContainer.querySelector('.disease-selector')) {
           initDiseaseSelector('disease-selector-container');
         }
+        // 처리 완료 후 버튼 복원
+        isNextButtonProcessing = false;
+        nextButton.disabled = false;
+        nextButton.textContent = originalButtonText;
       }, 100);
+    } else {
+      // 처리 완료 후 버튼 복원
+      isNextButtonProcessing = false;
+      nextButton.disabled = false;
+      nextButton.textContent = originalButtonText;
     }
   });
 
@@ -134,8 +181,15 @@ if (document.getElementById('signup-form')) {
   });
 
   // 회원가입 제출
+  let isSignupSubmitting = false; // 중복 제출 방지 플래그
+
   document.getElementById('signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // 이미 제출 중이면 무시
+    if (isSignupSubmitting) {
+      return;
+    }
 
     const username = document.getElementById('signup-username').value;
     const password = document.getElementById('signup-password').value;
@@ -159,15 +213,22 @@ if (document.getElementById('signup-form')) {
     if (yearsOfExperience) profile.yearsOfExperience = parseInt(yearsOfExperience);
     if (position) profile.position = position;
     if (department) profile.department = department;
-    
+
     // 2단계 유효성 검사 (필수 필드)
     if (!profile.name || !profile.age || !profile.gender || !profile.height || !profile.weight || !profile.occupation) {
         showAlert('모든 필수 프로필 정보를 입력해주세요.', 'error');
         return;
     }
 
+    const submitButton = document.getElementById('submit-btn');
+    const originalButtonText = submitButton.textContent;
 
     try {
+      // 제출 중 상태로 변경
+      isSignupSubmitting = true;
+      submitButton.disabled = true;
+      submitButton.textContent = '가입 처리 중...';
+
       const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -183,10 +244,18 @@ if (document.getElementById('signup-form')) {
         }, 1500);
       } else {
         showAlert(data.message, 'error');
+        // 실패 시 버튼 복원
+        isSignupSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
       }
     } catch (error) {
       console.error('회원가입 오류:', error);
       showAlert('서버와의 연결에 실패했습니다.', 'error');
+      // 오류 시 버튼 복원
+      isSignupSubmitting = false;
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
     }
   });
 

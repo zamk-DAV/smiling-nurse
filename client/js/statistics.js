@@ -216,13 +216,30 @@ function createMealsChart(canvasId, labels, records) {
 }
 
 // CSV 다운로드
+let isDownloadingCSV = false; // 중복 다운로드 방지 플래그
+
 async function downloadCSV() {
   if (!userId) {
     showAlert('로그인이 필요합니다.', 'error');
     return;
   }
 
+  // 이미 다운로드 중이면 무시
+  if (isDownloadingCSV) {
+    return;
+  }
+
+  const downloadButton = document.querySelector('button[onclick="downloadCSV()"]');
+  const originalButtonText = downloadButton ? downloadButton.textContent : '';
+
   try {
+    // 다운로드 중 상태로 변경
+    isDownloadingCSV = true;
+    if (downloadButton) {
+      downloadButton.disabled = true;
+      downloadButton.textContent = '다운로드 중...';
+    }
+
     const response = await fetch(`${API_URL}/records/${userId}/download`);
 
     if (response.ok) {
@@ -243,6 +260,13 @@ async function downloadCSV() {
   } catch (error) {
     console.error('CSV 다운로드 오류:', error);
     showAlert('CSV 다운로드 중 오류가 발생했습니다.', 'error');
+  } finally {
+    // 다운로드 완료 후 버튼 복원
+    isDownloadingCSV = false;
+    if (downloadButton) {
+      downloadButton.disabled = false;
+      downloadButton.textContent = originalButtonText;
+    }
   }
 }
 
@@ -492,7 +516,14 @@ function closeRecordsListModal() {
 }
 
 // 개별 기록 상세 보기 (10번 요구사항)
+let isViewingRecordDetail = false; // 중복 클릭 방지 플래그
+
 async function viewRecordDetail(recordIndex) {
+  // 이미 상세 보기 중이면 무시
+  if (isViewingRecordDetail) {
+    return;
+  }
+
   const record = allRecords[recordIndex];
 
   // 기존 모달 닫기
@@ -508,6 +539,9 @@ async function viewRecordDetail(recordIndex) {
 
   // 저장된 AI 분석이 없으면 새로 생성
   console.log('⚠️ 저장된 AI 분석 없음, 새로 생성 중...');
+
+  // 중복 클릭 방지 활성화
+  isViewingRecordDetail = true;
 
   // 로딩 모달 표시
   const loadingModal = showLoadingModal(`${new Date(record.date).toLocaleDateString()} 기록을 분석 중입니다.`);
@@ -546,6 +580,9 @@ async function viewRecordDetail(recordIndex) {
     console.error('기록 상세 보기 오류:', error);
     loadingModal.remove();
     showRecordDetailModal(record, 'AI 분석을 불러오는 중 오류가 발생했습니다.');
+  } finally {
+    // 처리 완료 후 플래그 해제
+    isViewingRecordDetail = false;
   }
 }
 

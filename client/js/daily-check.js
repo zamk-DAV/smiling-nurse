@@ -558,8 +558,16 @@ function updateSpeakingStatus(speaking) {
 }
 
 // 대화 모드 시작 함수 (폼 작성 중 대화)
+let isStartingConversation = false; // 중복 클릭 방지 플래그
+
 async function startConversationMode() {
   console.log('🎤 startConversationMode() 호출됨');
+
+  // 이미 대화 시작 중이면 무시
+  if (isStartingConversation) {
+    console.log('⚠️ 이미 대화 시작 중');
+    return;
+  }
 
   const userId = localStorage.getItem('userId');
   console.log('userId:', userId);
@@ -569,6 +577,9 @@ async function startConversationMode() {
     showAlert('로그인이 필요합니다.', 'error');
     return;
   }
+
+  // 중복 클릭 방지 활성화
+  isStartingConversation = true;
 
   // 로딩 오버레이 표시
   console.log('⏳ 로딩 오버레이 표시');
@@ -677,11 +688,16 @@ async function startConversationMode() {
 
       // 음성 인식 설정
       setupVoiceRecognition();
+
+      // 성공 시 플래그 해제
+      isStartingConversation = false;
     } else {
       closeLoadingOverlay();
       showAlert(`음성 대화 시작에 실패했습니다: ${data.message}`, 'error');
       closeVoiceUI();
       conversationMode = false;
+      // 실패 시 플래그 해제
+      isStartingConversation = false;
     }
   } catch (error) {
     console.error('❌ 음성 대화 시작 오류 상세:', error);
@@ -693,11 +709,20 @@ async function startConversationMode() {
     showAlert(`음성 대화 시작 중 오류가 발생했습니다: ${error.message}`, 'error');
     closeVoiceUI();
     conversationMode = false;
+    // 오류 시 플래그 해제
+    isStartingConversation = false;
   }
 }
 
 // 음성 대화 시작 함수 (AI 분석 후 대화)
+let isStartingHealthChat = false; // 중복 클릭 방지 플래그
+
 async function startHealthChat() {
+  // 이미 대화 시작 중이면 무시
+  if (isStartingHealthChat) {
+    return;
+  }
+
   const userId = localStorage.getItem('userId');
   const recordData = window.currentRecordData;
   const profileData = window.currentProfileData;
@@ -708,9 +733,13 @@ async function startHealthChat() {
     return;
   }
 
+  // 중복 클릭 방지 활성화
+  isStartingHealthChat = true;
+
   // 음성 인식 초기화
   const recognitionInstance = initSpeechRecognition();
   if (!recognitionInstance) {
+    isStartingHealthChat = false;
     return;
   }
 
@@ -747,14 +776,21 @@ async function startHealthChat() {
 
       // 음성 인식 설정
       setupVoiceRecognition();
+
+      // 성공 시 플래그 해제
+      isStartingHealthChat = false;
     } else {
       showAlert('음성 상담 시작에 실패했습니다.', 'error');
       closeVoiceUI();
+      // 실패 시 플래그 해제
+      isStartingHealthChat = false;
     }
   } catch (error) {
     console.error('음성 상담 시작 오류:', error);
     showAlert('음성 상담 시작 중 오류가 발생했습니다.', 'error');
     closeVoiceUI();
+    // 오류 시 플래그 해제
+    isStartingHealthChat = false;
   }
 }
 
@@ -976,7 +1012,17 @@ async function sendVoiceMessage(message) {
 }
 
 // 음성 세션 종료
+let isEndingVoiceSession = false; // 중복 클릭 방지 플래그
+
 async function endVoiceSession() {
+  // 이미 종료 중이면 무시
+  if (isEndingVoiceSession) {
+    return;
+  }
+
+  // 중복 클릭 방지 활성화
+  isEndingVoiceSession = true;
+
   // 로딩 오버레이 표시
   const loadingOverlay = showLoadingOverlay('💬 대화를 마무리하는 중...');
 
@@ -1007,6 +1053,8 @@ async function endVoiceSession() {
           closeVoiceUI();
           conversationMode = false;
           showAlert('대화가 종료되었습니다. 저장하기를 눌러 기록을 저장하세요.', 'success');
+          // 종료 완료 후 플래그 해제
+          isEndingVoiceSession = false;
         }, 3000);
       } else {
         // 기존 로직: 최종 조언 표시 및 대시보드 이동
@@ -1018,15 +1066,21 @@ async function endVoiceSession() {
         setTimeout(() => {
           closeVoiceUI();
           window.location.href = 'dashboard.html';
+          // 페이지 이동 전 플래그 해제
+          isEndingVoiceSession = false;
         }, 5000);
       }
     } else {
       showAlert('세션 종료에 실패했습니다.', 'error');
+      // 실패 시 플래그 해제
+      isEndingVoiceSession = false;
     }
   } catch (error) {
     console.error('세션 종료 오류:', error);
     closeLoadingOverlay();
     showAlert('세션 종료 중 오류가 발생했습니다.', 'error');
+    // 오류 시 플래그 해제
+    isEndingVoiceSession = false;
   }
 }
 

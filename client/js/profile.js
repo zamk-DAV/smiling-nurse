@@ -17,8 +17,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadProfile(userId);
 
   // 폼 제출 처리
+  let isProfileSubmitting = false; // 중복 제출 방지 플래그
+
   document.getElementById('profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // 이미 제출 중이면 무시
+    if (isProfileSubmitting) {
+      return;
+    }
 
     const formData = new FormData(e.target);
 
@@ -35,15 +42,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       department: formData.get('department') || null,
       chronicDiseases: getSelectedDiseases() // 질병 선택기에서 데이터 가져오기
     };
-    
+
     // 필수 필드 검증 (자잘한 오류 수정)
     if (!profile.name || !profile.age || !profile.gender || !profile.height || !profile.weight || !profile.occupation) {
         showAlert('모든 필수 기본 정보를 입력해주세요.', 'error');
         return;
     }
 
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
 
     try {
+      // 제출 중 상태로 변경
+      isProfileSubmitting = true;
+      submitButton.disabled = true;
+      submitButton.textContent = '저장 중...';
+
       const response = await fetch(`${API_URL}/user/profile/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -54,17 +68,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (data.success) {
         // 이름이 변경되었다면 localStorage도 업데이트
-        localStorage.setItem('username', profile.name); 
+        localStorage.setItem('username', profile.name);
         showAlert('프로필이 성공적으로 수정되었습니다!', 'success');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
         }, 1500);
       } else {
         showAlert(data.message, 'error');
+        // 실패 시 버튼 복원
+        isProfileSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
       }
     } catch (error) {
       console.error('프로필 수정 오류:', error);
       showAlert('서버와의 연결에 실패했습니다.', 'error');
+      // 오류 시 버튼 복원
+      isProfileSubmitting = false;
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
     }
   });
 });
